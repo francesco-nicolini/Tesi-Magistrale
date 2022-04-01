@@ -1,0 +1,32 @@
+
+
+
+Prima determinare quale sia il contributo dovuto all'effetto di memeoria, si è analizzato il caso in cui si considerano esclusivamente i contributi di ordine più alto per un fondo di 
+onde gravitazionali generate da incontri iperbolici tra buchi neri. Tale semplificazione permette di sviluppare più agvolmente la struttura matematica necessaria per questo genere di 
+calcoli, la quale potrà poi essere impiegata anche per la trattazione sull'effetto di memoria.
+
+Per valutare l'intensità di un fondo statistico, generalmente si introduce lo spettro di potenza (omega), definito dalla seguente relazione:
+dove ro_c è il valore critico della densità che distingue tra un universo aperto ed un universo chiuso.
+Lo spettro può essere determinato andando a considerare i contributi dovuti ai diversi eventi, in base alla loro distanza dall'osservatore (valutatata sotto forma del redshift z). Per 
+fare cio è innanzitutto necessario ricavare l'energia per unita logaritmica di frequenza nel sistema di riferimento della sorgente per un dato valore di z, e convertire poi quest'ultima 
+nel sistema di riferimento dell'osservatore. Tale operazione può essere svolta andando semplicemnete ad osservare che l'energia trasportata da un'onda gravitazionale trasforma, 
+in base alla metrica di Friedmann-Lemetre-Robinson-Walker, nel modo seguente:
+la frequenza varia esattamente nel medesimo modo e, poiche si tratta di una trasformazione lineare, il differenziale del logaritmo della frequenza è lo stesso nei due sistemi di 
+riferimento. Da tali considerazioni si può quindi concludere il seguente risultato:
+Per determinare omega quindi l'ultima operazione da svolgere è moltiplicare dE/dlnf per la densità numerica di eventi per unita di... e integrare su tutti i possibili valori di z 
+(generalmente si suppone z appertenente a [0,infinito( ).
+Spesso è conveniente scrivere la Grandezza N in termini della grandezza ......., in base alla seguente relazione.
+
+Una volta compreso quale sia il risultato finale che si vuole ottenere, si può procedere con la detrminazione dei vari oggetti che compaiono nel calcolo di omega, iniziando con lo spettro 
+in potenza di un singolo evento dE/dlnf.
+Si è considerato, a tal proposito, un sistema di due buchi neri con massa m_1 e m_2 rispettivamente, con una velocità relativa v0, un parametro di impatto b e tali per cui l'orbita nel 
+sistema del centro di massa sia di tipo iperbolico..........................
+
+La seconda grandezza che è necessario ricavare è la densista numerica dN/.... e per far questo si è considerato un sistema del tutto analogo a quello descritto nella sottosezione 
+precedente. Affinche non si venga a formare un sistema legato tra questi due buchi neri, e che di conseguenza la traiettoria nel centro di massa sia iperbolica, è necessario che 
+l'energia totale emessa sotto forma di onde gravitazionali sia inferiore all'energia cinetica iniziale, in modo che l'energia complesiva del sistema rimanga maggiore di zero.
+.........
+La sezione d'urto sigma per questo tipo di processo si può scrivere come pi*b**2 e se si esplicita la dipendenza di b da .......   si ottiene la seguente relazione:
+.........
+Il rate di eventi si può quindi andare a calcolare   
+ 
