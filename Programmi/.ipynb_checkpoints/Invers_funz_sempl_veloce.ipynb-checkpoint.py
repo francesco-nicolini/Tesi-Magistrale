@@ -123,15 +123,15 @@ deriv=[]
 
 for i in range(0, K):
 
-    def f_deriv(*var, l, i=i):
+    def f_deriv(*var, k, i=i):
 
-        sum= 2*var[l]*matrix[i][l][l]
+        sum= 2*var[k]*matrix[i][k][k]
 
         for j in range (0, K):
 
-            if (j!=l):
+            if (j!=k):
 
-                sum=sum + 2*var[j]*matrix[i][j][l]
+                sum=sum + 2*var[j]*matrix[i][j][k]
 
         return sum
 
@@ -157,6 +157,10 @@ for i in range(0,K):
 
 
 
+
+
+
+
 # k è l'indice dell'iterazione
 for k in range(0,N):
 
@@ -172,7 +176,7 @@ for k in range(0,N):
 
         for j in range(0,len(J[i])):
 
-            J[j][i]=deriv[j](*var, l=i)
+            J[j][i]=J_simb[j][i](*var)
 
     delta=np.linalg.solve(J,F)
     var=var - delta
@@ -209,7 +213,7 @@ if (K<30):
 
     iter=np.linspace(0,N,N+1)
     for i in range(0,K):
-        plt.plot(iter, graf[i], color="C{0}".format(i), label="x_{0}".format(i), linestyle="-", marker="", markersize=3)
+        plt.plot(iter, graf[i], color="C{0}".format(i), label=simb[i], linestyle="-", marker="", markersize=3)
 
     plt.legend()
     plt.show()

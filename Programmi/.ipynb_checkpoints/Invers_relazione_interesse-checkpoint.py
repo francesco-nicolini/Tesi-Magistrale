@@ -1,44 +1,80 @@
 import numpy as np
 import matplotlib.pyplot as plt
-
+import math
 
 
 
 # N contiene il numero delle iterazioni
-
 N=30
 
-
-
 # K contiene il numero di valori della funzione che si vogliono calcolare (ossia il numero delle variabili)
-
 K=10
 
-
-
 # estremo superiore e estremo inferiore delle frequenze considerate nell'integrale
-
 freq_min=1
 freq_max=100
 
-
-
 # estremo superiore e estremo inferiore delle masse considerate nell'integrale e scarto tra due masse consecutive
-
 m_min=1
 m_max=10
 
 dm= (m_max - m_min)/(K-1)
 
-
-
 # contiene il valore di partenza delle variabile
-
 var=np.linspace(0, 11, K)
 
 
 
-# lista delle masse indagate nella discretizzazione dell'integrale (sono in masse solari)
+
+# massa del sole in kg
+M_s=1.989*10**(30)
+
+# unità astronomica in m
+UA=1.496*10**(11)
+
+# costante di gravitazione universale in Nm**2/kg**2
+G= 6.7*10**(-11)
+
+# costante di gravitazione universale in U.A.**3/(M_S*s**3)
+G= (M_s/UA**3)*G
+
+
+
+
+
+# incertezza sul parametro di Hubble
+h_70=0.7
+
+# valore di omega della materia
+ome_M=0.3
+
+# valore di omega della materia oscura
+ome_DM=0.25
+
+# valore di delta_loc
+delta_loc=10**8
+
+# valore del semiasse maggiore in U.A.
+a=1
+
+# valore di y definito come e**2 - 1 con e l'eccentricità
+y=0.01
+
+xi= y - np.arctan(y)
+
+# costante che moltiplica la funzione omega nell'equazione 18 dell'articolo 2109.11376. (1/10)**2 compare poiche nell'equazione compare (nu/10)**2 (nu in Hz), (1/1000)**2 compare poiché nell'equazione compare (dm1/1000)*(dm2/1000) (m1 e m2 aono in masse solari)
+
+cost= 9.81*10**(-12)*h_70*(ome_M/0.3)**(-1/2)*(ome_DM/0.25)**2*(delta_loc/10**8)*(a/1)*(y/0.01)*(1/10)**2*(1/1000)**2
+
+
+
+
+
+
+
+
+
+# lista delle frequenze studiate
 
 freq=np.logspace(np.log10(freq_min), np.log10(freq_max), K)
 
@@ -56,32 +92,45 @@ def funz_omeg(nu):
 
     n=len(nu)
 
-    return 1*np.ones(n)
+    return 10**(-18)*np.ones(n)
 
 
 
-# la funzione usata per costruire le matrici
+# la funzione usata per costruire le matrici (si tiene conto anche del dm**2 in essa)
 
 def integ(m_1, m_2, nu):
 
-    z=(m_1*m_2) + nu
+    nu_0= np.sqrt(a**3/(G*(m_1 + m_2)))
+    x_0= 2*math.pi*nu_0*nu
+
+    z= dm**2*(1 - y**2 + 4*y**4 + 1.5*(x_0*y**6)/(xi))/( np.exp(2*x_0*xi)*(1 + y**2)**2)
 
     return z
 
 
-
-# la funzione che crea le matrici
+# la funzione che crea le matrici (si è usata la regola del trapezio, vedi file Prova_costruz_matrice_per_regola_trapez.py)
 
 def fun_mat(nu, K):
 
     a=np.zeros((K,K))
 
-    for i in range(0, K):
+    for i in range(0,K):
+
         for j in range(0,K):
 
-            a[i][j]=integ(masse[i], masse[j], nu)
+            if ( (i+j==0) or (i+j==2*(K-1)) or (i*j==0 and i+j==K-1) ):
 
-    return a
+                a[i][j]=integ(masse[i], masse[j], nu)/4
+
+
+# è un elif quindi si possono mettere casi già previsti dall'if precedente dal momento che questi, verificando il primo if, non saranno analizzati dal secondo
+            elif ( i*j==0 or i==K-1 or j==K-1 ):
+
+                a[i][j]=integ(masse[i], masse[j], nu)/2
+
+            else:
+
+                a[i][j]=integ(masse[i], masse[j], nu)
 
 
 
@@ -228,28 +277,3 @@ plt.ylabel("f(m)")
 plt.plot(masse, var, color="blue", linestyle="-", marker="")
 
 plt.show()
-
-
-'''
-a=np.zeros((K, K))
-a[j][i]=J_simb[j][i](*var)
-
-print("\n\n", np.linalg.det(a))
-
-print("\n\n", np.linalg.det(J))
-
-max=0
-
-for i in range(0,len(F)):
-
-    for j in range(0,len(J[i])):
-
-        assol=np.absolute(a[i][j] - J[i][j])
-
-        if (max<assol):
-
-            max=assol
-
-print(assol)
-'''
-
