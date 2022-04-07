@@ -8,11 +8,11 @@ import math
 N=30
 
 # K contiene il numero di valori della funzione che si vogliono calcolare (ossia il numero delle variabili)
-K=10
+K=50
 
 # estremo superiore e estremo inferiore delle frequenze considerate nell'integrale
-freq_min=1
-freq_max=100
+freq_min=10**(-8)
+freq_max=10**(0)
 
 # estremo superiore e estremo inferiore delle masse considerate nell'integrale e scarto tra due masse consecutive
 m_min=1
@@ -21,8 +21,24 @@ m_max=10
 dm= (m_max - m_min)/(K-1)
 
 # contiene il valore di partenza delle variabile
-var=np.linspace(0, 11, K)
+var=np.zeros(K)
 
+
+if (K%2==0):
+
+    for i in range(1,int(K/2)):
+
+        var[i]=var[i-1]+2/K
+        var[K-1-i]=var[i]
+
+if (K%2==1):
+
+    for i in range(1, int((K-1)/2)):
+
+        var[i]=var[i-1]+2/K
+        var[K-1-i]=var[i]
+
+    var[int((K-1)/2)]= var[int((K-1)/2)-1]  + 2/K
 
 
 
@@ -92,7 +108,7 @@ def funz_omeg(nu):
 
     n=len(nu)
 
-    return 10**(-18)*np.ones(n)
+    return 10**(-19)*np.ones(n)
 
 
 
@@ -105,7 +121,7 @@ def integ(m_1, m_2, nu):
 
     z= dm**2*(1 - y**2 + 4*y**4 + 1.5*(x_0*y**6)/(xi))/( np.exp(2*x_0*xi)*(1 + y**2)**2)
 
-    return z
+    return cost*z
 
 
 # la funzione che crea le matrici (si è usata la regola del trapezio, vedi file Prova_costruz_matrice_per_regola_trapez.py)
@@ -132,7 +148,7 @@ def fun_mat(nu, K):
 
                 a[i][j]=integ(masse[i], masse[j], nu)
 
-
+    return a
 
 # omeg contiene i valori di omega per le frequenze analizzate
 
@@ -145,6 +161,7 @@ omeg=funz_omeg(freq)
 matrix=[]
 
 for i in range(0, K):
+
 
     matrix.append(fun_mat(freq[i], K))
 
@@ -210,6 +227,7 @@ for i in range(0,K):
 for k in range(0,N):
 
 
+
 # riempie i vettori per i grafici
     for i in range(0,K):
         graf[i][k]=var[i]
@@ -244,7 +262,15 @@ if (K<30):
     for i in range(0,K):
         print("f_{0} =".format(i), funz[i](*var))
 
+massimo=0
 
+for i in range(0,K):
+
+    if (np.absolute(funz[i](*var)) > massimo):
+
+        massimo=np.absolute(funz[i](*var))
+
+print("Il massimo è:", massimo)
 
 # Grafico degli andamenti delle soluzioni all'aumentare del numero di iterazioni
 
@@ -274,6 +300,6 @@ plt.xlabel("massa [$M_\odot\$]")
 plt.ylabel("f(m)")
 
 
-plt.plot(masse, var, color="blue", linestyle="-", marker="")
+plt.plot(masse, np.abs(var), color="blue", linestyle="-", marker="")
 
 plt.show()
