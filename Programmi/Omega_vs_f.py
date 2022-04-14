@@ -4,6 +4,15 @@ import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 from scipy.integrate import dblquad
 
+
+
+# num contiene il numero di frequenze usate per realizzare il grafico
+num=100
+
+# freq_min e fre_max contengono il massimo valore della frequenza e il minimo (l'intervallo delle frequenze è creato in scala logaritmica
+freq_min=10**(-8)
+freq_max=10**(1)
+
 # massa del sole in kg
 M_s=1.989*10**(30)
 
@@ -93,7 +102,7 @@ def omega(nu, mu, sigma, m_min, m_max):
 
     return cost*nu**2*integrale
 
-nu=np.logspace(-5, 1, base=10, num=100)
+nu=np.logspace(np.log10(freq_min), np.log10(freq_max), base=10, num=num)
 
 
 omega_GW=np.zeros(len(nu))
@@ -110,11 +119,11 @@ ax.plot(nu, omega_GW, linestyle="-", color="blue")
 plt.title("$\Omega_{GW}$ in funzione della frequenza")
 plt.xlabel("f [Hz]")
 plt.ylabel("$\Omega_{GW}$")
-
+plt.yscale("log")
 plt.xscale("log")
 
 
-ax.ticklabel_format( axis="y", style="sci", scilimits=(0,0))
+#ax.ticklabel_format( axis="y", style="sci", scilimits=(0,0))
 plt.show()
 
 plt.show()

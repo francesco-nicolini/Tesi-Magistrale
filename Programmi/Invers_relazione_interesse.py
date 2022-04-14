@@ -5,10 +5,10 @@ import math
 
 
 # N contiene il numero delle iterazioni
-N=30
+N=100
 
 # K contiene il numero di valori della funzione che si vogliono calcolare (ossia il numero delle variabili)
-K=50
+K=10
 
 # estremo superiore e estremo inferiore delle frequenze considerate nell'integrale
 freq_min=10**(-8)
@@ -51,7 +51,7 @@ UA=1.496*10**(11)
 # costante di gravitazione universale in Nm**2/kg**2
 G= 6.7*10**(-11)
 
-# costante di gravitazione universale in U.A.**3/(M_S*s**3)
+# costante di gravitazione universale in U.A.**3/(M_S*s**2)
 G= (M_s/UA**3)*G
 
 
@@ -108,7 +108,7 @@ def funz_omeg(nu):
 
     n=len(nu)
 
-    return 10**(-19)*np.ones(n)
+    return 10**(-22)*np.ones(n)
 
 
 
@@ -121,7 +121,7 @@ def integ(m_1, m_2, nu):
 
     z= dm**2*(1 - y**2 + 4*y**4 + 1.5*(x_0*y**6)/(xi))/( np.exp(2*x_0*xi)*(1 + y**2)**2)
 
-    return cost*z
+    return cost*(nu**2)*z
 
 
 # la funzione che crea le matrici (si è usata la regola del trapezio, vedi file Prova_costruz_matrice_per_regola_trapez.py)
@@ -183,7 +183,7 @@ for i in range(0,K):
 
 
 
-# funzioni per il calcolo delle derivate parziali, queste sono inserite nella lista chiamata deriv (k è l'indice della variabile rispetto alla quale si vuole calcolare la derivata parziale
+# funzioni per il calcolo delle derivate parziali, queste sono inserite nella lista chiamata deriv (l è l'indice della variabile rispetto alla quale si vuole calcolare la derivata parziale
 
 deriv=[]
 
@@ -205,7 +205,7 @@ for i in range(0, K):
 
 
 
-# Inizializzazione di vari oggetti (F e J contengono rispettivament il valore di ogni funzione del sistema e lo jacobiano calcolati per le soluzioni all'n-esima interazione. var contiene le soluzione all'n-esima interazione
+# Inizializzazione di vari oggetti (F e J contengono rispettivament il valore di ogni funzione del sistema e lo jacobiano calcolati per le soluzioni all'n-esima interazione. var contiene le soluzione all'n-esima interazione)
 
 F=np.zeros(K)
 J=np.zeros((K,K))
@@ -300,6 +300,6 @@ plt.xlabel("massa [$M_\odot\$]")
 plt.ylabel("f(m)")
 
 
-plt.plot(masse, np.abs(var), color="blue", linestyle="-", marker="")
+plt.plot(masse, var, color="blue", linestyle="-", marker="")
 
 plt.show()
