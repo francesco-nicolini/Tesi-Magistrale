@@ -15,7 +15,7 @@ freq_max=10**(1)
 
 # percorso del file in cui stampare i risultati
 path="C:\\Users\\39366\\Dropbox\\PC\\Documents\\GitHub\\Tesi-Magistrale\\Programmi\\file_txt"
-name="Omega_GW.txt"
+name="omega_GW.txt"
 
 
 
