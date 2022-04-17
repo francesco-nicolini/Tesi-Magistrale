@@ -4,6 +4,8 @@ import math
 
 
 
+# PARAMETRI VARI
+
 # N contiene il numero delle iterazioni
 N=50
 
@@ -19,6 +21,20 @@ m_min=1
 m_max=10
 
 dm= (m_max - m_min)/(K-1)
+
+# se option è pari a "read" omega_GW è letto da file altrimenti viene creato tramite una funzione
+
+option="read"
+
+file_name=C:\\Users\\39366\\Dropbox\\PC\\Documents\\GitHub\\Tesi-Magistrale\\Programmi\\file_txt\\Omega_GW.txt"
+
+
+
+
+
+
+
+# VALORI INIZIALI DELLA DISTRIBUZIONE DA CERCARE
 
 # contiene il valore di partenza delle variabile
 var=np.zeros(K)
@@ -42,6 +58,12 @@ if (K%2==1):
 
 
 
+
+
+
+
+# COSTANTI FISICHE
+
 # massa del sole in kg
 M_s=1.989*10**(30)
 
@@ -56,6 +78,11 @@ G= (M_s/UA**3)*G
 
 
 
+
+
+
+
+# VALORE DI ALCUNE GRANDEZZE FISICHE CHE DEFINISCONO IL SISTEMA DEI DUE BUCHI NERI
 
 
 # incertezza sul parametro di Hubble
@@ -87,28 +114,39 @@ cost= 9.81*10**(-12)*h_70*(ome_M/0.3)**(-1/2)*(ome_DM/0.25)**2*(delta_loc/10**8)
 
 
 
+# CREAZIONE DEL FILE CONTENENTE LE FREQUENZE E DELL'ARRAY CONTENENTE I VALORI DI OMEGA_GW
+
+# freq contiene la lista delle frequenze
+# omega_GW contiene la lista dei valori dello spettro in potenza del fondo
+
+if (option=="read"):
+
+    freq, omega_GW=np.loadtxt(file_name, unpack=True)
+
+else:
+
+    def funz_omeg(nu):
+
+        n=len(nu)
+
+        return 10**(-22)*np.ones(n)
+
+
+    freq=np.logspace(np.log10(freq_min), np.log10(freq_max), K)
+    omega_GW=funz_omeg(freq)
 
 
 
-# lista delle frequenze studiate
 
-freq=np.logspace(np.log10(freq_min), np.log10(freq_max), K)
 
+
+
+# DEFINIZIONE DELLE FUNZIONI CHE COMPAIONO NELLA RELAZIONE DI RIFERIMENTO UNA VOLTA CHE E' STATO DISCRETIZZATO L'INTEGRALE
 
 
 # lista delle masse indagate nella discretizzazione dell'integrale (sono in masse solari)
 
 masse=np.linspace(m_min, m_max, K)
-
-
-
-# funzione per il calcolo di omega in funzione della frequenza secondo un certo modello
-
-def funz_omeg(nu):
-
-    n=len(nu)
-
-    return 10**(-22)*np.ones(n)
 
 
 
@@ -139,7 +177,7 @@ def fun_mat(nu, K):
                 a[i][j]=integ(masse[i], masse[j], nu)/4
 
 
-# è un elif quindi si possono mettere casi già previsti dall'if precedente dal momento che questi, verificando il primo if, non saranno analizzati dal secondo
+            # è un elif quindi si possono mettere casi già previsti dall'if precedente dal momento che questi, verificando il primo if, non saranno analizzati dal secondo
             elif ( i*j==0 or i==K-1 or j==K-1 ):
 
                 a[i][j]=integ(masse[i], masse[j], nu)/2
@@ -150,9 +188,6 @@ def fun_mat(nu, K):
 
     return a
 
-# omeg contiene i valori di omega per le frequenze analizzate
-
-omeg=funz_omeg(freq)
 
 
 
@@ -183,7 +218,7 @@ for i in range(0,K):
 
 
 
-# funzioni per il calcolo delle derivate parziali, queste sono inserite nella lista chiamata deriv (l è l'indice della variabile rispetto alla quale si vuole calcolare la derivata parziale
+# funzioni per il calcolo delle derivate parziali, queste sono inserite nella lista chiamata deriv (l è l'indice della variabile rispetto alla quale si vuole calcolare la derivata parziale)
 
 deriv=[]
 
@@ -202,6 +237,37 @@ for i in range(0, K):
         return sum
 
     deriv.append(f_deriv)
+
+
+
+
+
+
+# CREAZIONE DELLA FUNZIONE DA MINIMIZZARE E CALCOLO DELLE SUE DERIVATE PARZIALI
+
+# questa è la funzione di cui si derve cercare il minimo
+def funz_da_minim(*var):
+
+    somma=0
+
+    for i in range(0, len(funz)):
+        somma=somma + funz[i](*var)**2
+
+    return somma
+
+# funzione per il calcolo delle derivate parziali della funzione funz_da_minim (index è l'indice della variabile rispetto alla quale si vuole calcolare la derivata parziale)
+
+def gradiente(*var, index):
+
+    somma=0
+
+    for i in range(0, len(funz)):
+
+        somma= somma + funz[i](*var)*deriv[i](*var, index)
+
+    return 2*somma
+
+
 
 
 

@@ -13,6 +13,12 @@ num=100
 freq_min=10**(-8)
 freq_max=10**(1)
 
+# percorso del file in cui stampare i risultati
+path="C:\\Users\\39366\\Dropbox\\PC\\Documents\\GitHub\\Tesi-Magistrale\\Programmi\\file_txt"
+name="Omega_GW.txt"
+
+
+
 # massa del sole in kg
 M_s=1.989*10**(30)
 
@@ -126,7 +132,14 @@ plt.xscale("log")
 #ax.ticklabel_format( axis="y", style="sci", scilimits=(0,0))
 plt.show()
 
-plt.show()
+file_name=path + "\\" + name
+
+file= open(file_name, "w")
+np.savetxt(file, np.c_[nu, omega_GW])
+
+file.close()
+
+
 
 
 
