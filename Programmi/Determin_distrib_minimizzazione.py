@@ -24,10 +24,18 @@ dm= (m_max - m_min)/(K-1)
 # Se option è pari a "read" omega_GW è letto da file altrimenti viene creato tramite una funzione
 option="read"
 
+# Se metodo è uguale a "semplice" il minimo viene ricercato usando esclusivamente il gradiente.
+# Se metodo è pari a "barriera" il minimo vie ne cercato con il gradiente modificato da una funzione data dal prodotto tra rho e la somma di tutti gli esponenziali di argomento meno rho per il valore di una delle variabile su cui si sta minimizzando e (rho è un coefficiente che deve essere fornito e che dovreebe essere grande)
+# Se metodo è pari a "barriera + semplice" effettua prima la minimizzazione con il metodo "barriera" e quindi utilizza i valori trovati come valori iniziali per il metodo semplice.
+
+metodo= "semplice"
+
+rho= 500
+
 # Path del file se option è uguale a "read"
 file_name="C:\\Users\\39366\\Dropbox\\PC\\Documents\\GitHub\\Tesi-Magistrale\\Programmi\\file_txt\\omega_GW.txt"
 
-# Estremo superiore e estremo inferiore delle frequenze considerate (da selezionare solo se option è diverso da "read"
+# Estremo superiore e estremo inferiore delle frequenze considerate (da selezionare solo se option è diverso da "read")
 freq_min=10**(-8)
 freq_max=10**(0)
 
@@ -263,6 +271,7 @@ for i in range(0, K):
 # CREAZIONE DELLA FUNZIONE DA MINIMIZZARE E CALCOLO DELLE SUE DERIVATE PARZIALI
 
 # Questa è la funzione di cui si derve cercare il minimo
+
 def funz_da_minim(*var):
 
     somma=0
@@ -291,98 +300,273 @@ def gradiente(*var, index):
 
 
 
-# ESECUZIONE DELL'ALGORITMO DI MINIMIZZAZIONE
+# VARIE FUNZIONI PER EFFETTUARE LA MINIMIZZAZIONE
 
-print("Funzione calcolata con i valori iniziali:", funz_da_minim(*val_iniz))
+# funzione che si basa esclusivamente sul gradiente. funz è la funzione da minimizzare, gradinete il gradiente di quest'ultima, b è lacostante che moltiplica il gradiente quando si calcola il passo successivo dell'iterazione, iniz_val sono i valori iniziali,  N è il numero delle iterazioni da effettuare, K è il numero delle variabili (sia N che K sono variabili globali quindi non devono essere fornite alla funzione). La funzione restituisce i valori che minimizzano e un lista contenente i valori trovat ad ogni iterazione in modo da poter effettuare dei grafici con l'andamento delle soluzioni al variare del numero di iterazioni. Restituisce prima le soluzioni e poi la lista.
 
+def min_sempl(funz, gradiente, b, iniz_val):
 
-# Vettori introdotti per poter fare i grafici finali
-
-graf=[]
-
-for i in range(0,K):
-
-    a=np.zeros(N+1)
-    graf.append(a)
+    global K, N
 
 
-val=val_iniz
+    print("Funzione calcolata con i valori iniziali:", min_sempl(*iniz_val))
 
 
+    # Vettori introdotti per poter fare i grafici finali
 
-# array che contiene i valori del nuovo punto (esempio in due dimenzioni: se mettessi val[0]=val[0] - b*derivate(*val) andrebbe bene, ma val[1]=val[1] - b*derivate(*val) darebbe problemi poichè val a destra conterrebbe il vecchio valore di val[1] e il nuovo valore di val[0] e non i vecchi valori di entrambi
+    graf=[]
 
-provv= np.ones(len(val))
+    for i in range(0,K):
 
-
-
-# Ciclo con le iterazioni
-
-for i in range(0,N):
-
-    for j in range(0, len(val)):
-        graf[j][i]=val[j]
+        a=np.zeros(N+1)
+        graf.append(a)
 
 
-    for j in range(0, len(val)):
-        provv[j]= val[j] - b*gradiente(*val, index=j)
-
-    val= provv
+    val=iniz_val
 
 
 
-# Inserimento delle soluzioni trovate nelle liste per la realizzazione dei grafici
-
-for i in range(0, len(val)):
-    graf[i][N]=val[i]
+    # array che contiene i valori del nuovo punto (esempio in due dimenzioni: se mettessi val[0]=val[0] - b*derivate(*val) andrebbe bene, ma val[1]=val[1] - b*derivate(*val) darebbe problemi poichè val a destra conterrebbe il vecchio valore di val[1] e il nuovo valore di val[0] e non i vecchi valori di entrambi
 
 
-
-# Stampa dei risultati finali
-
-print("\nSoluzioni:\n",val,"\n")
-
-print("Funzione calcolate con i valori delle variabili individuati:")
-print("f =", funz_da_minim(*val))
+    provv= np.ones(len(val))
 
 
+    # Ciclo con le iterazioni
+
+    for i in range(0,N):
+
+        for j in range(0, len(val)):
+            graf[j][i]=val[j]
+
+
+        for j in range(0, len(val)):
+            provv[j]= val[j] - b*gradiente(*val, index=j)
+
+        val= provv
+
+
+
+    # Inserimento delle soluzioni trovate nelle liste per la realizzazione dei grafici
+
+    for i in range(0, len(val)):
+        graf[i][N]=val[i]
+
+
+
+    # Stampa dei risultati finali
+
+    print("\nSoluzioni:\n",val,"\n")
+
+    print("Funzione calcolate con i valori delle variabili individuati mediante il metodo semplice:")
+    print("f =", funz_da_minim(*val))
+
+    return val, graf
 
 
 
 
 
-# REALIZZAZIONE DEI GRAFICI
+# Funzione per eviatare che vengano ottenuti valori negativi. Sitratta di un esponenziale.
 
-# Grafico degli andamenti delle soluzioni all'aumentare del numero di iterazioni
+def barriera(*val, rho):
 
-if (K<30):
+    global K
+
+    sum=0
+
+    for i in range(0, K):
+
+        sum= sum + np.exp(-rho*val[i])
+
+    return rho*sum
+
+
+
+
+
+# Funzione che si basa sul gradiente modificato da una funzione esponenziale in moda da evitare che si ottengano soluzioni con valori negativi. funz è la funzione da minimizzare, gradinete il gradiente di quest'ultima, barriera è la funzione che modifica il gradiente, rho è il parametro che compare in quest'ultima, b è lacostante che moltiplica il gradiente quando si calcola il passo successivo dell'iterazione, iniz_val sono i valori iniziali,  N è il numero delle iterazioni da effettuare, K è il numero delle variabili (sia N che K sono variabili globali quindi non devono essere fornite alla funzione). La funzione restituisce i valori che minimizzano e un lista contenente i valori trovat ad ogni iterazione in modo da poter effettuare dei grafici con l'andamento delle soluzioni al variare del numero di iterazioni. Restituisce prima le soluzioni e poi la lista.
+
+def min_barriera(funz, gradiente, barriera, rho, b, iniz_val):
+
+    global K, N
+
+
+    print("Funzione calcolata con i valori iniziali:", min_sempl(*iniz_val))
+
+
+    # Vettori introdotti per poter fare i grafici finali
+
+    graf=[]
+
+    for i in range(0,K):
+
+        a=np.zeros(N+1)
+        graf.append(a)
+
+
+    val=iniz_val
+
+
+
+    # array che contiene i valori del nuovo punto (esempio in due dimenzioni: se mettessi val[0]=val[0] - b*derivate(*val) andrebbe bene, ma val[1]=val[1] - b*derivate(*val) darebbe problemi poichè val a destra conterrebbe il vecchio valore di val[1] e il nuovo valore di val[0] e non i vecchi valori di entrambi
+
+
+    provv= np.ones(len(val))
+
+
+    # Ciclo con le iterazioni
+
+    for i in range(0,N):
+
+        for j in range(0, len(val)):
+            graf[j][i]=val[j]
+
+
+        for j in range(0, len(val)):
+            provv[j]= val[j] - b*( gradiente(*val, index=j) - barriera(*val, rho) )
+
+        val= provv
+
+
+
+    # Inserimento delle soluzioni trovate nelle liste per la realizzazione dei grafici
+
+    for i in range(0, len(val)):
+        graf[i][N]=val[i]
+
+
+
+    # Stampa dei risultati finali
+
+    print("\nSoluzioni:\n",val,"\n")
+
+    print("Funzione calcolate con i valori delle variabili individuati con il metodo barriera:")
+    print("f =", funz_da_minim(*val))
+
+    return val, graf
+
+
+
+
+
+
+# FUNZIONI PER LA REALIZZAZIONE DI GRAFICI
+
+# grafici realizza sia i grafici degli andamenti delle soluzioni trovate al avriare del numero di iterazioni (solo se K<30), sia il grafico della f(m).
+# graf è la lista di array che contengono i valori delle varie variabili all'aumentare del numero di iterazioni, val è un array contenente le solzioni trovate, tipologia è una stringa che si aggiunge al titolo per chiarire con quale processo i valori che minimizzano sono stati individuati (se tiplogoa è pari a "nulla", non si aggiunge nulla al titolo)
+
+def grafici(graf, val, tipologia ):
+
+    global N, K
+    global masse
+
+    # Grafico degli andamenti delle soluzioni all'aumentare del numero di iterazioni
+
+    if (K<30):
+
+        plt.figure()
+
+        if (tipologia=="nulla"):
+            title= "Valore delle Variabili al Variare del Numero di Iterazioni"
+
+        else:
+            title= "Valore delle Variabili al Variare del Numero di Iterazioni"
+            title= title + " (" + tipologia + ")"
+
+        plt.title(title)
+        plt.xlabel("Numero iterazioni")
+        plt.ylabel("Valori variabili")
+
+        iter=np.linspace(0,N,N+1)
+
+        for i in range(0,K):
+            plt.plot(iter, graf[i], color="C{0}".format(i), label="f(m_{0})".format(i), linestyle="-", marker="", markersize=3)
+
+
+
+        plt.legend()
+        plt.tight_layout()
+        plt.show()
+
+
+
+    # Grafico della soluzione ottenuta in funzione della massa
 
     plt.figure()
 
-    plt.title("Valore delle Variabili al Variare del Numero di Iterazioni")
-    plt.xlabel("Numero iterazioni")
-    plt.ylabel("Valori variabili")
+    if (tipologia=="nulla"):
+        title= "f(m) in funzione di m"
 
-    iter=np.linspace(0,N,N+1)
+    else:
+        title= "f(m) in funzione di m"
+        title= title + " (" + tipologia + ")"
 
-    for i in range(0,K):
-        plt.plot(iter, graf[i], color="C{0}".format(i), label="f(m_{0})".format(i), linestyle="-", marker="", markersize=3)
+    plt.title(title)
+    plt.xlabel("massa [M_sole]")
+    plt.ylabel("f(m)")
 
-    plt.legend()
+
+    plt.plot(masse, val, color="blue", linestyle="", marker="o")
+
+    plt.tight_layout()
     plt.show()
 
+    return
 
 
-# Grafico della soluzione ottenuta in funzione della massa
-
-plt.figure()
-
-plt.title("f(m) in funzione di m")
-plt.xlabel("massa [$M_sole]")
-plt.ylabel("f(m)")
 
 
-plt.plot(masse, val, color="blue", linestyle="", marker="o")
 
-plt.tight_layout()
-plt.show()
+
+
+
+# ESECUZIONE DELL'ALGORITMO DI MINIMIZZAZIONE E REALIZZAZIONE DEI GRAFICI
+
+if (metodo=="semplice"):
+
+    val, graf= min_sempl(funz_da_minim, gradiente, b, val_iniz)
+
+    grafici(graf, val, tipologia=metodo)
+
+
+
+elif (metodo=="barriera"):
+
+    val, graf= min_barriera(funz_da_minim, gradiente, barriera, rho, b, val_iniz)
+
+    grafici(graf, val, tipologia=metodo)
+
+
+
+elif  (metodo=="barriera + semplice"):
+
+
+    val_1, graf_1= min_barriera(funz_da_minim, gradiente, barriera, rho, b, val_iniz)
+
+    tipologia="barriera"
+    grafici(graf, val, tipologia= tiplogia)
+
+
+    val_2, graf_2= min_sempl(funz_da_minim, gradiente, b, val_1)
+
+    grafici(graf, val, tipologia=metodo)
+
+
+else:
+
+    print("E' stato attribuito alla variabile metodo un valore che non rientra nei casi elencati all'inizio, si procede per tanto con l'effettuare la minimizzazione mediante il metodo definito semplice. ")
+
+    val, graf= min_sempl(funz_da_minim, gradiente, b, val_iniz)
+
+    tipologia="semplice"
+    grafici(graf, val, tipologia= tipologia)
+
+
+
+
+
+
+
+
+
