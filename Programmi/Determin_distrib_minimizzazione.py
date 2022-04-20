@@ -358,7 +358,7 @@ def min_sempl(funz, gradiente, b, iniz_val):
 
     print("\nSoluzioni:\n",val,"\n")
 
-    print("Funzione calcolate con i valori delle variabili individuati mediante il metodo semplice:")
+    print("Funzione calcolate con i valori delle variabili individuati mediante il metodo \"semplice\":")
     print("f =", funz_da_minim(*val))
 
     return val, graf
@@ -441,7 +441,7 @@ def min_barriera(funz, gradiente, barriera, rho, b, iniz_val):
 
     print("\nSoluzioni:\n",val,"\n")
 
-    print("Funzione calcolate con i valori delle variabili individuati con il metodo barriera:")
+    print("Funzione calcolate con i valori delle variabili individuati con il metodo \"barriera\":")
     print("f =", funz_da_minim(*val))
 
     return val, graf
@@ -555,7 +555,7 @@ elif  (metodo=="barriera + semplice"):
 
 else:
 
-    print("E' stato attribuito alla variabile metodo un valore che non rientra nei casi elencati all'inizio, si procede per tanto con l'effettuare la minimizzazione mediante il metodo definito semplice. ")
+    print("E' stato attribuito alla variabile metodo un valore che non rientra nei casi elencati all'inizio, si procede per tanto con l'effettuare la minimizzazione mediante il metodo \"semplice\". ")
 
     val, graf= min_sempl(funz_da_minim, gradiente, b, val_iniz)
 
