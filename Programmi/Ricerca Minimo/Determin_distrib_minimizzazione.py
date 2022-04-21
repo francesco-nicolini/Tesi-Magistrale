@@ -24,10 +24,6 @@ dm= (m_max - m_min)/(K-1)
 # Se option è pari a "read" omega_GW è letto da file altrimenti viene creato tramite una funzione
 option="read"
 
-# Se option è pari a "read" ponendo disegna uguale a True verra realizzato il grafico della soluzione esatta nello stesso piano in cui vengono rappresentate le soluzioni trovate minimizzando
-disegna=True
-
-
 # Se metodo è uguale a "semplice" il minimo viene ricercato usando esclusivamente il gradiente.
 # Se metodo è pari a "barriera" il minimo vie ne cercato con il gradiente modificato da una funzione data dal prodotto tra rho e la somma di tutti gli esponenziali di argomento meno rho per il valore di una delle variabile su cui si sta minimizzando e (rho è un coefficiente che deve essere fornito e che dovreebe essere grande)
 # Se metodo è pari a "barriera + semplice" effettua prima la minimizzazione con il metodo "barriera" e quindi utilizza i valori trovati come valori iniziali per il metodo semplice.
@@ -128,19 +124,14 @@ cost= 9.81*10**(-12)*h_70*(ome_M/0.3)**(-1/2)*(ome_DM/0.25)**2*(delta_loc/10**8)
 
 
 
-# CREAZIONE DELL'ARRAY CONTENENTE LE FREQUENZE E DELL'ARRAY CONTENENTE I VALORI DI OMEGA_GW
+# CREAZIONE DEL FILE CONTENENTE LE FREQUENZE E DELL'ARRAY CONTENENTE I VALORI DI OMEGA_GW
 
 # freq contiene la lista delle frequenze
 # omega_GW contiene la lista dei valori dello spettro in potenza del fondo
 
-
 if (option=="read"):
 
-    #  masse_graf contiene le masse per effettuare il grafico di f_esatta
-    # f_esatta la forma della distribuzione letta da file (è la soluzione esatta)
-
-    # all'interno del file le grandezze sono in quest'ordine: freq, omega_GW, masse_graf e infine f_esatta
-    freq, omega_GW, masse_graf, f_esatta=np.loadtxt(file_name, unpack=True)
+    freq, omega_GW=np.loadtxt(file_name, unpack=True)
 
 else:
 
@@ -469,8 +460,6 @@ def grafici(graf, val, tipologia ):
     global N, K
     global masse
 
-    global disegna, masse_graf, f_esatta
-
     # Grafico degli andamenti delle soluzioni all'aumentare del numero di iterazioni
 
     if (K<30):
@@ -517,10 +506,6 @@ def grafici(graf, val, tipologia ):
 
 
     plt.plot(masse, val, color="blue", linestyle="", marker="o")
-
-    if (disegna==True):
-
-        plt.plot(masse_graf, f_esatta, color="red", linestyle="-", marker="")
 
     plt.tight_layout()
 

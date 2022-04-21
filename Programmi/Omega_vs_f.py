@@ -18,6 +18,19 @@ path="C:\\Users\\39366\\Dropbox\\PC\\Documents\\GitHub\\Tesi-Magistrale\\Program
 name="omega_GW.txt"
 
 
+# valore minimo e valore massimo considerati per la massa
+
+m_min=1
+m_max=30
+
+# valori dei parametri della funzione f_m (ossia f(m) )
+
+mu=10
+sigma=1
+
+
+
+
 
 # massa del sole in kg
 M_s=1.989*10**(30)
@@ -76,7 +89,7 @@ print( "z= ",(1 - y**2 + 4*y**4 + 1.5*(x_0*y**6)/(xi))/( np.exp(2*x_0*xi)*(1 + y
 # descrive la distribuzione in massa dei buchi neri primordiali
 def f_m(m, mu, sigma):
 
-    return m**2/np.sqrt(2*math.pi*sigma**2)*np.exp(-(m-mu)**2/(2*sigma**2))
+    return (m**2/np.sqrt(2*math.pi*sigma**2))*np.exp(-(m-mu)**2/(2*sigma**2))
 
 
 # è la funzione che appare nell'integrale di omega escludendo le f(m)
@@ -115,29 +128,126 @@ omega_GW=np.zeros(len(nu))
 
 for i in range(0, len(nu)):
 
-    omega_GW[i]=omega(nu[i], mu=10, sigma=1, m_min=1, m_max=30)
+    omega_GW[i]=omega(nu[i], mu=mu, sigma=sigma, m_min=m_min, m_max=m_max)
 
+
+
+# Grafico
 
 fig, ax = plt.subplots()
 
 ax.plot(nu, omega_GW, linestyle="-", color="blue")
 
-plt.title("$\Omega_{GW}$ in funzione della frequenza")
+plt.title("$\\Omega_{GW}$ in funzione della frequenza")
 plt.xlabel("f [Hz]")
-plt.ylabel("$\Omega_{GW}$")
+plt.ylabel("$\\Omega_{GW}$")
 plt.yscale("log")
 plt.xscale("log")
 
 
 #ax.ticklabel_format( axis="y", style="sci", scilimits=(0,0))
-plt.show()
+
+
+
+
+# stampa su file
+
+masse=np.linspace(m_min, m_max, 1000)
+
 
 file_name=path + "\\" + name
 
 file= open(file_name, "w")
-np.savetxt(file, np.c_[nu, omega_GW])
+
+
+# if per far si che tutti gli array da stampare abbiano le stesse dimensioni (se un array è più piccolo gli vengono aggiunte delle componenti pari ad " ".
+
+
+distrib= f_m(masse, mu, sigma)
+
+
+
+if ( len(nu)<len(masse) ):
+
+    copia_nu= []
+    copia_omega= []
+
+
+    for i in range(0, len(nu)):
+
+        car_nu= str(nu[i])[0]
+        car_omega= str(omega_GW[i])[0]
+
+        for j in range(1, len(str(nu[i]))):
+
+            car_nu= car_nu + str(nu[i])[j]
+
+        copia_nu.append(car_nu)
+
+
+        for j in range(1, len(str(omega_GW[i]))):
+
+            car_omega= car_omega + str(omega_GW[i])[j]
+
+        copia_omega.append(car_omega)
+
+
+
+    for i in range(len(nu), len(masse)):
+
+        copia_nu.append("")
+        copia_omega.append("")
+
+    nu= copia_nu
+    omega_GW= copia_omega
+
+
+elif ( len(masse)<len(nu) ):
+
+
+    copia_masse= []
+    copia_distrib= []
+
+
+    for i in range(0, len(masse)):
+
+        car_masse= str(masse[i])[0]
+        car_distrib= str(distrib[i])[0]
+
+        for j in range(1, len(str(masse[i]))):
+
+            car_masse= car_masse + str(masse[i])[j]
+
+        copia_masse.append(car_masse)
+
+
+        for j in range(1, len(str(distrib[i]))):
+
+            car_distrib= car_distrib + str(distrib[i])[j]
+
+        copia_distrib.append(car_distrib)
+
+
+
+    for i in range(len(masse), len(nu)):
+
+        copia_nasse.append("")
+        copia_distrib.append("")
+
+    masse= copia_masse
+    distrib= copia_distrib
+
+
+
+np.savetxt(file, np.c_[nu, omega_GW, masse, distrib], fmt="%s", delimiter="\t")
 
 file.close()
+
+
+
+plt.show()
+
+
 
 
 
