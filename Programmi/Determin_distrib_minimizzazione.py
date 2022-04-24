@@ -40,7 +40,7 @@ file_name_f_m="C:\\Users\\39366\\Dropbox\\PC\\Documents\\GitHub\\Tesi-Magistrale
 # Se metodo è pari a "annealing" la ricerca del minimo viene effettuata mediante la funzione scipy.optimize.dual_annealing
 # Se metodo è "SPA" (Semplice con Passo Aggiornato) si procede come nel caso "semplice", con la differenza però che si conforonta il nuovo valore della funzione con il avlore al paasso precedente e se la prima risulta maggiore il valore delle soluzioni non si aggiorna e il passo viene diviso per agg, altrimenti si ha l'aggiornamento e il passo viene moltiplicato per agg. La ricerca termina quando il passo diviene inferiore a soglia
 
-metodo= "semplice"
+metodo= "SPA"
 
 rho= 100
 
@@ -671,7 +671,6 @@ def grafici(graf, val, tipologia ):
 if (metodo=="semplice"):
 
     val, graf= min_sempl(funz_da_minim, gradiente, b, *val_iniz)
-
     grafici(graf, val, tipologia=metodo)
 
 
@@ -679,7 +678,6 @@ if (metodo=="semplice"):
 elif (metodo=="barriera"):
 
     val, graf= min_barriera(funz_da_minim, gradiente, barriera, rho, b, *val_iniz)
-
     grafici(graf, val, tipologia=metodo)
 
 
@@ -688,24 +686,19 @@ elif (metodo=="barriera + semplice"):
 
 
     val_1, graf_1= min_barriera(funz_da_minim, gradiente, barriera, rho, b, *val_iniz)
-
     tipologia= "barriera"
     grafici(graf, val, tipologia= tipologia)
 
-
     val_2, graf_2= min_sempl(funz_da_minim, gradiente, b, *val_1)
-
     grafici(graf, val, tipologia= metodo)
+
 
 
 elif (metodo=="SPA"):
 
     val, graf=min_agg(funz_da_minim, gradiente, b, *val_iniz)
-
     tipologia= "semplice con passo aggiornato"
     grafici(graf, val, tipologia= metodo)
-
-
 
 
 
