@@ -13,7 +13,7 @@ N=500
 K=50
 
 # b è l'ampiezza del passo
-b= 10**(6)
+b= 10**(8)
 
 # Estremo superiore e estremo inferiore delle masse considerate nell'integrale e scarto tra due masse consecutive
 m_min=1
@@ -38,15 +38,12 @@ file_name_f_m="C:\\Users\\39366\\Dropbox\\PC\\Documents\\GitHub\\Tesi-Magistrale
 # Se metodo è pari a "barriera" il minimo vie ne cercato con il gradiente modificato da una funzione data dal prodotto tra rho e la somma di tutti gli esponenziali di argomento meno rho per il valore di una delle variabile su cui si sta minimizzando e (rho è un coefficiente che deve essere fornito e che dovreebe essere grande)
 # Se metodo è pari a "barriera + semplice" effettua prima la minimizzazione con il metodo "barriera" e quindi utilizza i valori trovati come valori iniziali per il metodo semplice.
 # Se metodo è pari a "annealing" la ricerca del minimo viene effettuata mediante la funzione scipy.optimize.dual_annealing
-# Se metodo è "SPA" (Semplice con Passo Aggiornato) si procede come nel caso "semplice", con la differenza però che si conforonta il nuovo valore della funzione con il avlore al paasso precedente e se la prima risulta maggiore il valore delle soluzioni non si aggiorna e il passo viene diviso per agg, altrimenti si ha l'aggiornamento e il passo viene moltiplicato per agg. La ricerca termina quando il passo diviene inferiore a soglia
 
-metodo= "semplice"
+metodo= "annealing"
 
 rho= 100
 
-agg= 2
 
-soglia= 1
 
 # Estremo superiore e estremo inferiore delle frequenze considerate (da selezionare solo se option è diverso da "read")
 freq_min=10**(-8)
@@ -62,7 +59,7 @@ freq_max=10**(0)
 # Contiene il valore di partenza delle variabile
 val_iniz=np.zeros(K)
 
-
+'''
 if (K%2==0):
 
     for i in range(1,int(K/2)):
@@ -83,7 +80,7 @@ if (K%2==1):
 for i in range(12, 19):
 
     val_iniz[i]= 40
-'''
+
 
 
 
@@ -205,7 +202,7 @@ def integ(m_1, m_2, nu):
 
     z= dm**2*(1 - y**2 + 4*y**4 + 1.5*(x_0*y**6)/(xi))/( np.exp(2*x_0*xi)*(1 + y**2)**2)
 
-    return (nu**2)*z
+    return cost*(nu**2)*z
 
 
 
@@ -259,7 +256,7 @@ for i in range(0,K):
     def f(*var,i=i):
 
         vec_dx=np.dot(var,matrix[i])
-        return np.dot(vec_dx,var)-omega_GW[i]/cost
+        return np.dot(vec_dx,var)-omega_GW[i]
 
     funz.append(f)
 
@@ -294,12 +291,12 @@ for i in range(0, K):
 
 # Questa è la funzione di cui si derve cercare il minimo
 
-def funz_da_minim(*var):
+def funz_da_minim(var):
 
     somma=0
 
-    for i in range(0, len(funz)):
-        somma=somma + (funz[i](*var))**2
+    for i in range(0, len(var)):
+        somma=somma + (funz[i](*var)/cost)**2
 
     return somma
 
@@ -354,8 +351,6 @@ def min_sempl(funz, gradiente, b, *iniz_val):
     provv= np.ones(len(val))
 
 
-
-
     # Ciclo con le iterazioni
 
     for i in range(0,N):
@@ -365,18 +360,9 @@ def min_sempl(funz, gradiente, b, *iniz_val):
 
 
         for j in range(0, len(val)):
-
-            grad= gradiente(*val, index=j)
-            provv[j]= val[j] - b*grad
-
-            #print(grad, val[j])
-
-
-        #input("---------------------")
+            provv[j]= val[j] - b*gradiente(*val, index=j)
 
         val= provv
-
-
 
 
 
@@ -392,7 +378,6 @@ def min_sempl(funz, gradiente, b, *iniz_val):
     print("\nSoluzioni:\n",val,"\n")
 
     print("Funzione calcolate con i valori delle variabili individuati mediante il metodo \"semplice\":")
-
     print("f =", funz(*val))
     print("\nRapporto tra la funzione calcolata dopo aver eseguito l'algoritmo e la funzione calcolata con i valori iniziali:")
     print("rapporto=",funz(*val)/funz(*iniz_val))
@@ -488,148 +473,95 @@ def min_barriera(funz, gradiente, bar, rho, b, *iniz_val):
     return val, graf
 
 
+# Funzione che effettua la minimizzazione mediante il metodo del simulated annealing, stampando i risultati e realizzando il grafico delle soluzioni. funz è la funzione da minimizzare
+
+def min_annealing(funz):
+
+    global K
+    global masse
+
+    from scipy.optimize import dual_annealing
+
+    limiti=[]
+
+    for i in range(0, K):
+
+        lim= [0, 1000]
+        limiti.append(lim)
+
+    limiti= tuple(limiti)
+
+    res= dual_annealing(funz, limiti)
+
+    val=res.x
+
+    # grafico
+
+    plt.figure()
+
+    title= "f(m) in funzione di m (annealing)"
+    plt.title(title)
+    plt.xlabel("massa [M_sole]")
+    plt.ylabel("f(m)")
 
 
-# Funzione che si basa sul gradiente come per min_sempl() ma in cui il passo è aggiornato ogni volta (vedi scelta modo all'inzio del programma). funz è la funzione da minimizzare, gradinete il gradiente di quest'ultima, b è il valore iniziale per lo scalre che moltiplica il gradiente quando si calcola il passo successivo dell'iterazione, iniz_val sono i valori iniziali, K è il numero delle variabili e soglia è il valore che deve raggiungere lo scalare affinche la ricerca termini (sia K che soglia sono variabili globali quindi non devono essere fornite alla funzione). La funzione restituisce i valori che minimizzano e un lista contenente i valori trovat ad ogni iterazione in modo da poter effettuare dei grafici con l'andamento delle soluzioni al variare del numero di iterazioni. Restituisce prima le soluzioni e poi la lista.
+    plt.plot(masse, val, color="blue", linestyle="", marker="o")
 
+    if (disegna==True):
 
-def min_agg(funz, gradiente, b, *iniz_val):
+        plt.plot(masse_graf, f_esatta, color="red", linestyle="-", marker="")
 
-    global K, soglia
+    plt.tight_layout()
 
+    # stampa dei risultati
 
-    print("Funzione calcolata con i valori iniziali:", funz(*iniz_val))
-
-
-    # Vettori introdotti per poter fare i grafici finali
-
-    graf=[]
-
-    for i in range(0,K):
-
-        a=[]
-        graf.append(a)
-
-
-    val=iniz_val
-
-    for j in range(0, len(val)):
-        graf[j].append(val[j])
-
-
-
-    # array che contiene i valori del nuovo punto (esempio in due dimenzioni: se mettessi val[0]=val[0] - b*derivate(*val) andrebbe bene, ma val[1]=val[1] - b*derivate(*val) darebbe problemi poichè val a destra conterrebbe il vecchio valore di val[1] e il nuovo valore di val[0] e non i vecchi valori di entrambi
-
-
-    provv= np.ones(len(val))
-
-
-    # count tiene conto del numero di iterazioni che sono state effettuate
-
-    count= 0
-
-
-
-    # Ciclo con le iterazioni
-
-    while(b > soglia):
-
-
-        for j in range(0, len(val)):
-
-            grad= gradiente(*val, index=j)
-            provv[j]= val[j] - b*grad
-
-            #print(grad, val[j])
-
-
-        #input("---------------------")
-
-
-        if ( funz(*val) < funz(*provv)):
-
-            b= b/2
-
-        else:
-
-            b= b*2
-            val=provv
-
-            # Inserimento delle soluzioni trovate nelle liste per la realizzazione dei grafici
-            for j in range(0, len(val)):
-                graf[j].append(val[j])
-
-
-        count= count + 1
+    print("Funzione calcolate con i valori delle variabili individuati con il metodo \"barriera\":")
+    print("f =", funz(val))
 
 
 
-
-
-    # Stampa dei risultati finali
-
-    print("\nSono state efftuate {0} iterazioni.".format(count))
-
-    print("\nSoluzioni:\n",val,"\n")
-
-    print("Funzione calcolate con i valori delle variabili individuati mediante il metodo \"Semplice con passo aggoirnato\":")
-    print("f =", funz(*val))
-
-    print("\nRapporto tra la funzione calcolata dopo aver eseguito l'algoritmo e la funzione calcolata con i valori iniziali:")
-    print("rapporto=",funz(*val)/funz(*iniz_val))
-
-
-
-    return val, graf
+    return val
 
 
 
 # FUNZIONI PER LA REALIZZAZIONE DI GRAFICI
 
-# grafici realizza sia i grafici degli andamenti delle soluzioni trovate al avriare del numero di iterazioni (solo se K<30, altrimenti fa il grafico solo delle prime 10), sia il grafico della f(m).
+# grafici realizza sia i grafici degli andamenti delle soluzioni trovate al avriare del numero di iterazioni (solo se K<30), sia il grafico della f(m).
 # graf è la lista di array che contengono i valori delle varie variabili all'aumentare del numero di iterazioni, val è un array contenente le solzioni trovate, tipologia è una stringa che si aggiunge al titolo per chiarire con quale processo i valori che minimizzano sono stati individuati (se tiplogoa è pari a "nulla", non si aggiunge nulla al titolo)
 
 def grafici(graf, val, tipologia ):
 
-    global K
+    global N, K
     global masse
 
     global disegna, masse_graf, f_esatta
 
-
-    dimenz= len(graf[0])
-
     # Grafico degli andamenti delle soluzioni all'aumentare del numero di iterazioni
 
-    if (K<=10):
-        num_variab= K
-        title= "Valore delle Variabili al Variare del Numero di Iterazioni"
+    if (K<30):
 
-    else:
-        num_variab= 10
-        title= "Valore delle Prime Dieci Variabili al Variare del Numero di Iterazioni"
+        plt.figure()
 
-    plt.figure()
+        if (tipologia=="nulla"):
+            title= "Valore delle Variabili al Variare del Numero di Iterazioni"
 
-    if (tipologia!="nulla"):
-        title= title + " (" + tipologia + ")"
+        else:
+            title= "Valore delle Variabili al Variare del Numero di Iterazioni"
+            title= title + " (" + tipologia + ")"
 
+        plt.title(title)
+        plt.xlabel("Numero iterazioni")
+        plt.ylabel("Valori variabili")
 
-    plt.title(title)
-    plt.xlabel("Numero iterazioni")
-    plt.ylabel("Valori delle variabili")
+        iter=np.linspace(0,N,N+1)
 
-    iter=np.linspace(0, dimenz, num= dimenz, endpoint=False )
-
-    for i in range(0,num_variab):
-        plt.plot(iter, graf[i], color="C{0}".format(i), label="f(m_{0})".format(i), linestyle="-", marker="", markersize=3)
+        for i in range(0,K):
+            plt.plot(iter, graf[i], color="C{0}".format(i), label="f(m_{0})".format(i), linestyle="-", marker="", markersize=3)
 
 
 
-    plt.legend()
-    plt.tight_layout()
-
-
+        plt.legend()
+        plt.tight_layout()
 
 
 
@@ -689,21 +621,21 @@ elif (metodo=="barriera + semplice"):
 
     val_1, graf_1= min_barriera(funz_da_minim, gradiente, barriera, rho, b, *val_iniz)
 
-    tipologia= "barriera"
+    tipologia="barriera"
     grafici(graf, val, tipologia= tipologia)
 
 
     val_2, graf_2= min_sempl(funz_da_minim, gradiente, b, *val_1)
 
-    grafici(graf, val, tipologia= metodo)
+    grafici(graf, val, tipologia=metodo)
 
 
-elif (metodo=="SPA"):
 
-    val, graf=min_agg(funz_da_minim, gradiente, b, *val_iniz)
+elif (metodo=="annealing"):
 
-    tipologia= "semplice con passo aggiornato"
-    grafici(graf, val, tipologia= metodo)
+    val= min_annealing(funz_da_minim)
+
+
 
 
 
@@ -721,8 +653,3 @@ else:
 
 
 plt.show()
-
-
-
-
-

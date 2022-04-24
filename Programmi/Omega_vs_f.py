@@ -15,8 +15,8 @@ freq_max=10**(1)
 
 # percorso del file in cui stampare i risultati
 path="C:\\Users\\39366\\Dropbox\\PC\\Documents\\GitHub\\Tesi-Magistrale\\Programmi\\file_txt"
-name="omega_GW.txt"
-
+name_omega= "omega_GW.txt"
+name_f_m= "f_m.txt"
 
 # valore minimo e valore massimo considerati per la massa
 
@@ -153,18 +153,23 @@ plt.xscale("log")
 # stampa su file
 
 masse=np.linspace(m_min, m_max, 1000)
-
-
-file_name=path + "\\" + name
-
-file= open(file_name, "w")
-
-
-# if per far si che tutti gli array da stampare abbiano le stesse dimensioni (se un array è più piccolo gli vengono aggiunte delle componenti pari ad " ".
-
-
 distrib= f_m(masse, mu, sigma)
 
+file_name_omega= path + "\\" + name_omega
+file_name_f_m= path + "\\" + name_f_m
+
+file_omega= open(file_name_omega, "w")
+file_f_m= open(file_name_f_m, "w")
+
+np.savetxt(file_omega, np.c_[nu, omega_GW])
+file_omega.close()
+
+np.savetxt(file_f_m, np.c_[masse, distrib])
+file_f_m.close()
+
+
+'''
+# if per far si che tutti gli array da stampare abbiano le stesse dimensioni (se un array è più piccolo gli vengono aggiunte delle componenti pari ad " ".
 
 
 if ( len(nu)<len(masse) ):
@@ -236,12 +241,10 @@ elif ( len(masse)<len(nu) ):
 
     masse= copia_masse
     distrib= copia_distrib
+'''
 
 
 
-np.savetxt(file, np.c_[nu, omega_GW, masse, distrib], fmt="%s", delimiter="\t")
-
-file.close()
 
 
 
