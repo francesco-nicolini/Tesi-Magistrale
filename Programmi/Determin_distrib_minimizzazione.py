@@ -612,6 +612,7 @@ def min_agg(funz, gradiente, b, *iniz_val):
 
 
         if ( memory==loop ):
+            print("\n\nE' stato individuato un loop\n\n")
             b=b/(agg**3)
 
 
