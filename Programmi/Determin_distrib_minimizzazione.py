@@ -605,7 +605,7 @@ def min_agg(funz, gradiente, b, *iniz_val):
         count= count + 1
 
 
-        print("iterazione= {0}, b= {:.2e}, rapporto= {:.2e}".format(count, b, funz(*val)/funz(*iniz_val)))
+        print("iterazione= {0}, b= {:.1e}, rapporto= {:.3e}".format(count, b, funz(*val)/funz(*iniz_val)))
 
         print(memory)
 
@@ -616,7 +616,7 @@ def min_agg(funz, gradiente, b, *iniz_val):
 
 
 
-        # comando testato in test_semplice_agg.py, pìtermina il loop se viene premuto il tasto s
+        # comando testato in test_semplice_agg.py, termina il loop se viene premuto il tasto s
         if(keyboard.is_pressed("s")):
             print("\n\nCiclo interrotto\n\n")
             break
@@ -636,9 +636,18 @@ def min_agg(funz, gradiente, b, *iniz_val):
     print("\nRapporto tra la funzione calcolata dopo aver eseguito l'algoritmo e la funzione calcolata con i valori iniziali:")
     print("rapporto=",funz(*val)/funz(*iniz_val))
 
-    print("componente in modulo piu grande del gradiente calcolato con le soluzioni finali: ")
+    print("\nComponente in modulo piu grande del gradiente calcolato con le soluzioni finali: ")
 
-    print(gradiente)
+    mass_grad= 0
+
+    for i in range(0, len(val)):
+
+        a= abs( gradiente(*val, index=i) )
+
+        if ( a>mass_grad ):
+            mass_grad= a
+
+    print(mass_grad)
 
 
 
