@@ -52,6 +52,10 @@ massimo_b= 10**(300)
 
 dim_loop= 5
 
+# delle prime num_dis variabili viene realizzato il grafico del loro andamento al variare dell'iterazione
+
+num_dis= 15
+
 # Estremo superiore e estremo inferiore delle frequenze considerate (da selezionare solo se option è diverso da "read")
 freq_min=10**(-8)
 freq_max=10**(0)
@@ -66,28 +70,18 @@ freq_max=10**(0)
 # Contiene il valore di partenza delle variabile
 val_iniz=np.zeros(K)
 
-'''
-if (K%2==0):
+for i in range(13, 18):
+    val_iniz[i]= 40/5 + val_iniz[i-1]
 
-    for i in range(1,int(K/2)):
+for i in range(18, 22):
+    val_iniz[i]= val_iniz[i-1] - 40/4
 
-        val_iniz[i]=val_iniz[i-1]+2/K
-        val_iniz[K-1-i]=val_iniz[i]
-
-if (K%2==1):
-
-    for i in range(1, int((K-1)/2)):
-
-        val_iniz[i]=val_iniz[i-1]+2/K
-        val_iniz[K-1-i]=val_iniz[i]
-
-    val_iniz[int((K-1)/2)]= val_iniz[int((K-1)/2)-1]  + 2/K
 '''
 
 for i in range(12, 19):
 
     val_iniz[i]= 40
-
+'''
 
 
 
@@ -605,7 +599,7 @@ def min_agg(funz, gradiente, b, *iniz_val):
         count= count + 1
 
 
-        print("iterazione= {0}, b= {:.1e}, rapporto= {:.3e}".format(count, b, funz(*val)/funz(*iniz_val)))
+        print("iterazione= {:}, b= {:.1e}, rapporto= {:.10e}".format(count, b, funz(*val)/funz(*iniz_val)))
 
         print(memory)
 
@@ -660,10 +654,11 @@ def min_agg(funz, gradiente, b, *iniz_val):
 
 # grafici realizza sia i grafici degli andamenti delle soluzioni trovate al avriare del numero di iterazioni (solo se K<30, altrimenti fa il grafico solo delle prime 10), sia il grafico della f(m).
 # graf è la lista di array che contengono i valori delle varie variabili all'aumentare del numero di iterazioni, val è un array contenente le solzioni trovate, tipologia è una stringa che si aggiunge al titolo per chiarire con quale processo i valori che minimizzano sono stati individuati (se tiplogoa è pari a "nulla", non si aggiunge nulla al titolo)
+# delle prime num_dis variabile viene realizzato un grafico al variare del numero dell'iterazione
 
 def grafici(graf, val, tipologia ):
 
-    global K
+    global K, num_dis
     global masse
 
     global disegna, masse_graf, f_esatta
@@ -673,12 +668,12 @@ def grafici(graf, val, tipologia ):
 
     # Grafico degli andamenti delle soluzioni all'aumentare del numero di iterazioni
 
-    if (K<=10):
+    if (K<=num_dis):
         num_variab= K
         title= "Valore delle Variabili al Variare del Numero di Iterazioni"
 
     else:
-        num_variab= 10
+        num_variab= num_dis
         title= "Valore delle Prime Dieci Variabili al Variare del Numero di Iterazioni"
 
     plt.figure()
