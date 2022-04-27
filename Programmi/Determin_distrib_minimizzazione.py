@@ -1,13 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import math
-
+import keyboard
 
 
 # OPZIONI VARIE
 
 # N contiene il numero delle iterazioni
-N=500
+N=5000
 
 # K contiene il numero di valori della funzione che si vogliono calcolare (ossia il numero delle variabili)
 K=50
@@ -38,15 +38,19 @@ file_name_f_m="C:\\Users\\39366\\Dropbox\\PC\\Documents\\GitHub\\Tesi-Magistrale
 # Se metodo è pari a "barriera" il minimo vie ne cercato con il gradiente modificato da una funzione data dal prodotto tra rho e la somma di tutti gli esponenziali di argomento meno rho per il valore di una delle variabile su cui si sta minimizzando e (rho è un coefficiente che deve essere fornito e che dovreebe essere grande)
 # Se metodo è pari a "barriera + semplice" effettua prima la minimizzazione con il metodo "barriera" e quindi utilizza i valori trovati come valori iniziali per il metodo semplice.
 # Se metodo è pari a "annealing" la ricerca del minimo viene effettuata mediante la funzione scipy.optimize.dual_annealing
-# Se metodo è "SPA" (Semplice con Passo Aggiornato) si procede come nel caso "semplice", con la differenza però che si conforonta il nuovo valore della funzione con il avlore al paasso precedente e se la prima risulta maggiore il valore delle soluzioni non si aggiorna e il passo viene diviso per agg, altrimenti si ha l'aggiornamento e il passo viene moltiplicato per agg. La ricerca termina quando il passo diviene inferiore a soglia
+# Se metodo è "SPA" (Semplice con Passo Aggiornato) si procede come nel caso "semplice", con la differenza però che si conforonta il nuovo valore della funzione con il avlore al paasso precedente e se la prima risulta maggiore il valore delle soluzioni non si aggiorna e il passo viene diviso per agg, altrimenti si ha l'aggiornamento e il passo viene moltiplicato per agg. La ricerca termina quando il passo diviene inferiore a soglia. Se b superiore a massimo_b, b smette di essere aggiornato fino a che non inizia a diminuire. dim_loop è il numero di passi precedenti a quello corrente che vengono considerati al fine di capire se si è raggiunto un loop, come descritto nel commento a memory nella funzione min_agg()
 
 metodo= "SPA"
 
 rho= 100
 
-agg= 2
+agg= 10
 
 soglia= 1
+
+massimo_b= 10**(300)
+
+dim_loop= 5
 
 # Estremo superiore e estremo inferiore delle frequenze considerate (da selezionare solo se option è diverso da "read")
 freq_min=10**(-8)
@@ -62,7 +66,7 @@ freq_max=10**(0)
 # Contiene il valore di partenza delle variabile
 val_iniz=np.zeros(K)
 
-
+'''
 if (K%2==0):
 
     for i in range(1,int(K/2)):
@@ -83,7 +87,7 @@ if (K%2==1):
 for i in range(12, 19):
 
     val_iniz[i]= 40
-'''
+
 
 
 
@@ -344,7 +348,7 @@ def min_sempl(funz, gradiente, b, *iniz_val):
         graf.append(a)
 
 
-    val=iniz_val
+    val=np.array(iniz_val)
 
 
 
@@ -374,7 +378,9 @@ def min_sempl(funz, gradiente, b, *iniz_val):
 
         #input("---------------------")
 
-        val= provv
+        for j in range(0, len(val)):
+
+            val[j]=provv[j]
 
 
 
@@ -490,12 +496,15 @@ def min_barriera(funz, gradiente, bar, rho, b, *iniz_val):
 
 
 
-# Funzione che si basa sul gradiente come per min_sempl() ma in cui il passo è aggiornato ogni volta (vedi scelta modo all'inzio del programma). funz è la funzione da minimizzare, gradinete il gradiente di quest'ultima, b è il valore iniziale per lo scalre che moltiplica il gradiente quando si calcola il passo successivo dell'iterazione, iniz_val sono i valori iniziali, K è il numero delle variabili e soglia è il valore che deve raggiungere lo scalare affinche la ricerca termini (sia K che soglia sono variabili globali quindi non devono essere fornite alla funzione). La funzione restituisce i valori che minimizzano e un lista contenente i valori trovat ad ogni iterazione in modo da poter effettuare dei grafici con l'andamento delle soluzioni al variare del numero di iterazioni. Restituisce prima le soluzioni e poi la lista.
+# Funzione che si basa sul gradiente come per min_sempl() ma in cui il passo è aggiornato ogni volta (vedi scelta modo all'inzio del programma). funz è la funzione da minimizzare, gradinete il gradiente di quest'ultima, b è il valore iniziale per lo scalre che moltiplica il gradiente quando si calcola il passo successivo dell'iterazione, iniz_val sono i valori iniziali, K è il numero delle variabili, soglia è il valore che deve raggiungere lo scalare affinche la ricerca termini, agg è il valore usato per aggiornare il passo, massimo_b è il valore che il passo non deve superare per evitare overflow e dim_loop è la dimensione dell'array che serve a capire se si ha un loop ( K, soglia, agg, massimo_b e dim_loop sono variabili globali quindi non devono essere fornite alla funzione). La funzione restituisce i valori che minimizzano e un lista contenente i valori trovat ad ogni iterazione in modo da poter effettuare dei grafici con l'andamento delle soluzioni al variare del numero di iterazioni. Restituisce prima le soluzioni e poi la lista.
 
 
 def min_agg(funz, gradiente, b, *iniz_val):
 
-    global K, soglia
+    global K, soglia, agg, massimo_b, dim_loop
+
+
+    print("\n\nPremere s per far terminare il programma e osservare i risultati ottenuti senza che la condizione sul passo sia stata eseguita.\n\n")
 
 
     print("Funzione calcolata con i valori iniziali:", funz(*iniz_val))
@@ -511,10 +520,28 @@ def min_agg(funz, gradiente, b, *iniz_val):
         graf.append(a)
 
 
-    val=iniz_val
+    val=np.array(iniz_val)
+
 
     for j in range(0, len(val)):
         graf[j].append(val[j])
+
+
+    # costruzione dell'array che controlla che non si appia un loop: questo è dato da una sequenza di 0 e 1 alternati
+
+    # il comando sotto crea una lista lunga dim_loop e le cui componenti sono tutte pari a 0
+
+    loop= [0]*dim_loop
+
+    for i in range(1, dim_loop):
+
+        loop[i]=abs(loop[i-1] - 1)
+
+
+    # costruzione dell'array che tiene conto, per ognuna delle ultime dim_loop iterazioi, se la funzione calcolata nei nuovi valori è maggiore (in ale caso la componente corrispondente è 0) o minore (in tale caso la componente corrispondente è 1) di quella calcolata con i valori trovati al passo precedente. Se l'algoritmo arriva al punto in cui entra in un loop, ossia ad un iterazione il passo viene aumentato, a quello successivo diminuito, a quello successivo ancora aumentato e cosi via, allora le componenti di questo array sarano uguali a ad 1 e 0 in modo alternato e si avra pertanto un'uguaglianza con l'array loop
+
+    memory=[2]*dim_loop
+
 
 
 
@@ -534,34 +561,65 @@ def min_agg(funz, gradiente, b, *iniz_val):
 
     while(b > soglia):
 
+        if(count > N):
+            break
+
 
         for j in range(0, len(val)):
 
-            grad= gradiente(*val, index=j)
-            provv[j]= val[j] - b*grad
-
-            #print(grad, val[j])
-
-
-        #input("---------------------")
+            provv[j]= val[j] - b*gradiente(*val, index=j)
 
 
         if ( funz(*val) < funz(*provv)):
 
-            b= b/2
+            b= b/agg
+
+            #list.pop(index) elimina la componente della lista di indice pari a index
+            memory.pop(0)
+            memory.append(0)
+
+
+
 
         else:
 
-            b= b*2
-            val=provv
+            if( b<massimo_b):
+                b= b*agg
+
+
+            for j in range(0, len(val)):
+                val[j]= provv[j]
+
+
+            memory.pop(0)
+            memory.append(1)
+
 
             # Inserimento delle soluzioni trovate nelle liste per la realizzazione dei grafici
             for j in range(0, len(val)):
                 graf[j].append(val[j])
 
 
+
+
         count= count + 1
 
+
+        print("iterazione= {0}, b= {:.2e}, rapporto= {:.2e}".format(count, b, funz(*val)/funz(*iniz_val)))
+
+        print(memory)
+
+
+
+        if ( memory==loop ):
+            b=b/(agg**3)
+
+
+
+        # comando testato in test_semplice_agg.py, pìtermina il loop se viene premuto il tasto s
+        if(keyboard.is_pressed("s")):
+            print("\n\nCiclo interrotto\n\n")
+            break
 
 
 
@@ -577,6 +635,10 @@ def min_agg(funz, gradiente, b, *iniz_val):
 
     print("\nRapporto tra la funzione calcolata dopo aver eseguito l'algoritmo e la funzione calcolata con i valori iniziali:")
     print("rapporto=",funz(*val)/funz(*iniz_val))
+
+    print("componente in modulo piu grande del gradiente calcolato con le soluzioni finali: ")
+
+    print(gradiente)
 
 
 
