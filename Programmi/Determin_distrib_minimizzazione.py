@@ -58,7 +58,7 @@ num_dis= 15
 
 # Estremo superiore e estremo inferiore delle frequenze considerate (da selezionare solo se option è diverso da "read")
 freq_min=10**(-8)
-freq_max=10**(0)
+freq_max=10**(1)
 
 
 
