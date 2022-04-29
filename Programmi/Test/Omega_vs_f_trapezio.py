@@ -7,7 +7,7 @@ import math
 # OPZIONI VARIE
 
 # K contiene il numero di valori della funzione che si vogliono calcolare (ossia il numero delle variabili)
-K=1000
+K=200
 
 # Estremo superiore e estremo inferiore delle masse considerate nell'integrale e scarto tra due masse consecutive
 m_min=1
@@ -215,12 +215,6 @@ for i in range(0, K):
 
 
 
-
-
-
-
-
-
 # Grafico di omega_GW
 
 fig, ax = plt.subplots()
@@ -228,7 +222,7 @@ fig, ax = plt.subplots()
 ax.plot(freq, omega_GW, linestyle="-", color= "blue", label= "Regola Trapezio")
 
 if( option=="read" ):
-    ax.plot(freq_1, omega_GW_1, linestyle="--", color="yellow", label= "Funzione Python")
+    ax.plot(freq_1, omega_GW_1, linestyle="--", color="orange", label= "scipy.integrate.dblquad()")
 
 plt.title("$\\Omega_{GW}$ in funzione della frequenza")
 plt.xlabel("f [Hz]")

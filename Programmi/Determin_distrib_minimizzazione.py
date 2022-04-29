@@ -12,8 +12,6 @@ N=5000
 # K contiene il numero di valori della funzione che si vogliono calcolare (ossia il numero delle variabili)
 K=50
 
-# b è l'ampiezza del passo
-b= 10**(6)
 
 # Estremo superiore e estremo inferiore delle masse considerate nell'integrale e scarto tra due masse consecutive
 m_min=1
@@ -40,17 +38,21 @@ file_name_f_m="C:\\Users\\39366\\Dropbox\\PC\\Documents\\GitHub\\Tesi-Magistrale
 # Se metodo è pari a "annealing" la ricerca del minimo viene effettuata mediante la funzione scipy.optimize.dual_annealing
 # Se metodo è "SPA" (Semplice con Passo Aggiornato) si procede come nel caso "semplice", con la differenza però che si conforonta il nuovo valore della funzione con il avlore al paasso precedente e se la prima risulta maggiore il valore delle soluzioni non si aggiorna e il passo viene diviso per agg, altrimenti si ha l'aggiornamento e il passo viene moltiplicato per agg. La ricerca termina quando il passo diviene inferiore a soglia. Se b superiore a massimo_b, b smette di essere aggiornato fino a che non inizia a diminuire. dim_loop è il numero di passi precedenti a quello corrente che vengono considerati al fine di capire se si è raggiunto un loop, come descritto nel commento a memory nella funzione min_agg()
 
+# b è l'ampiezza del passo
+b= 10**(-5)
+
 metodo= "SPA"
 
 rho= 100
 
-agg= 10
+agg= 5
 
-soglia= 1
+soglia= 10**(-20)
 
 massimo_b= 10**(300)
 
 dim_loop= 5
+
 
 # delle prime num_dis variabili viene realizzato il grafico del loro andamento al variare dell'iterazione
 
@@ -68,7 +70,10 @@ freq_max=10**(1)
 # VALORI INIZIALI DELLA DISTRIBUZIONE DA CERCARE
 
 # Contiene il valore di partenza delle variabile
+
+
 val_iniz=np.zeros(K)
+
 
 for i in range(13, 18):
     val_iniz[i]= 40/5 + val_iniz[i-1]
@@ -81,8 +86,8 @@ for i in range(18, 22):
 for i in range(12, 19):
 
     val_iniz[i]= 40
-'''
 
+'''
 
 
 
@@ -498,7 +503,15 @@ def min_agg(funz, gradiente, b, *iniz_val):
     global K, soglia, agg, massimo_b, dim_loop
 
 
-    print("\n\nPremere s per far terminare il programma e osservare i risultati ottenuti senza che la condizione sul passo sia stata eseguita.\n\n")
+    print("\n\nPremere t per far terminare il programma e osservare i risultati ottenuti senza che la condizione sul passo sia stata eseguita.\n\n")
+
+    print("Premere l per passare alla modalità lettura.\n\n")
+
+    print("Premere r per ritornare alla modalità rapida.\n\n")
+
+    print("Premere s per stampare ad ogni iterazione alcune informazioni ottenute.\n\n")
+
+    print("Premere n per non stampare.\n\n")
 
 
     print("Funzione calcolata con i valori iniziali:", funz(*iniz_val))
@@ -529,14 +542,12 @@ def min_agg(funz, gradiente, b, *iniz_val):
 
     for i in range(1, dim_loop):
 
-        loop[i]=abs(loop[i-1] - 1)
+        loop[i]= 1 - loop[i-1]
 
 
     # costruzione dell'array che tiene conto, per ognuna delle ultime dim_loop iterazioi, se la funzione calcolata nei nuovi valori è maggiore (in ale caso la componente corrispondente è 0) o minore (in tale caso la componente corrispondente è 1) di quella calcolata con i valori trovati al passo precedente. Se l'algoritmo arriva al punto in cui entra in un loop, ossia ad un iterazione il passo viene aumentato, a quello successivo diminuito, a quello successivo ancora aumentato e cosi via, allora le componenti di questo array sarano uguali a ad 1 e 0 in modo alternato e si avra pertanto un'uguaglianza con l'array loop
 
     memory=[2]*dim_loop
-
-
 
 
     # array che contiene i valori del nuovo punto (esempio in due dimenzioni: se mettessi val[0]=val[0] - b*derivate(*val) andrebbe bene, ma val[1]=val[1] - b*derivate(*val) darebbe problemi poichè val a destra conterrebbe il vecchio valore di val[1] e il nuovo valore di val[0] e non i vecchi valori di entrambi
@@ -550,18 +561,24 @@ def min_agg(funz, gradiente, b, *iniz_val):
     count= 0
 
 
+    # se flag_l è apri ad 1 il programma passa alla modalità di lettura in cui ogni volta che un'iterazione è completatata il programma si blocca fino a che non si preme un pulsante (diverso da t o r)
+
+    flag_l= 0
+
+    # se flag_s è pari ad 1 il programma stampa alcune informazioni ad ogni iterazione
+
+    flag_s= 1
+
 
     # Ciclo con le iterazioni
 
     while(b > soglia):
 
-        if(count > N):
-            break
-
 
         for j in range(0, len(val)):
 
             provv[j]= val[j] - b*gradiente(*val, index=j)
+
 
 
         if ( funz(*val) < funz(*provv)):
@@ -571,8 +588,6 @@ def min_agg(funz, gradiente, b, *iniz_val):
             #list.pop(index) elimina la componente della lista di indice pari a index
             memory.pop(0)
             memory.append(0)
-
-
 
 
         else:
@@ -595,28 +610,60 @@ def min_agg(funz, gradiente, b, *iniz_val):
 
 
 
-
         count= count + 1
 
 
-        print("iterazione= {:}, b= {:.1e}, rapporto= {:.10e}".format(count, b, funz(*val)/funz(*iniz_val)))
-
-        print(memory)
 
 
 
         if ( memory==loop ):
-            print("\n\nE' stato individuato un loop\n\n")
-            b=b/(agg**3)
+            if ( flag_s==1 ):
+                print("E' stato individuato un loop")
+
+            b=b/(agg**2)
+
+
+        if( keyboard.is_pressed("s") ):
+            print("\nModalità stampa\n")
+            flag_s=1
+
+        if( keyboard.is_pressed("n") ):
+            print("\nModalità senza stampa\n")
+            flag_s=0
+
+
+        # comando testato in test_semplice_agg.py, se si preme il pulsante lt flag viene posto pari ad 1 e il programma passa alla modalità di lettura
+
+        if( keyboard.is_pressed("l") ):
+            print("\nModalità lettura\n")
+            flag_l= 1
+
+
+        # se si preme il pulsante r flag viene posto pari ad 0 e il programma ritorna alla modalità rapida
+
+        if( keyboard.is_pressed("r") ):
+            print("\nModalità rapida\n")
+            flag_l= 0
 
 
 
-        # comando testato in test_semplice_agg.py, termina il loop se viene premuto il tasto s
-        if(keyboard.is_pressed("s")):
+        if ( flag_s==1 ):
+
+            print("iterazione= {:}, b= {:.1e}, rapporto= {:.10e}".format(count, b, funz(*val)/funz(*iniz_val)))
+
+            print(memory)
+
+
+
+        if ( flag_l==1 and flag_s==1 ):
+            input("-------------------------------------------")
+
+
+
+        # termina il loop se viene premuto il tasto t
+        if( keyboard.is_pressed("t") ):
             print("\n\nCiclo interrotto\n\n")
             break
-
-
 
 
     # Stampa dei risultati finali
@@ -647,6 +694,9 @@ def min_agg(funz, gradiente, b, *iniz_val):
 
 
     return val, graf
+
+
+
 
 
 
