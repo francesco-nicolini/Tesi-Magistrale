@@ -4,13 +4,14 @@ import math
 import keyboard
 
 
+
 # OPZIONI VARIE
 
 # N contiene il numero delle iterazioni
 N=5000
 
 # K contiene il numero di valori della funzione che si vogliono calcolare (ossia il numero delle variabili)
-K=50
+K=16
 
 
 # Estremo superiore e estremo inferiore delle masse considerate nell'integrale e scarto tra due masse consecutive
@@ -45,13 +46,14 @@ metodo= "SPA"
 
 rho= 100
 
-agg= 5
+agg_dis= 2
+agg_sal=1.1
 
 soglia= 10**(-20)
 
 massimo_b= 10**(300)
 
-dim_loop= 5
+dim_loop= 100
 
 
 # delle prime num_dis variabili viene realizzato il grafico del loro andamento al variare dell'iterazione
@@ -72,16 +74,16 @@ freq_max=10**(1)
 # Contiene il valore di partenza delle variabile
 
 
-val_iniz=np.zeros(K)
-
-
-for i in range(13, 18):
-    val_iniz[i]= 40/5 + val_iniz[i-1]
-
-for i in range(18, 22):
-    val_iniz[i]= val_iniz[i-1] - 40/4
+val_iniz=10*np.ones(K)
 
 '''
+for i in range(12, 17):
+    val_iniz[i]= 40/5 + val_iniz[i-1]
+
+for i in range(17, 21):
+    val_iniz[i]= val_iniz[i-1] - 40/4
+
+
 
 for i in range(12, 19):
 
@@ -185,8 +187,11 @@ plt.ylabel("$\\Omega_{GW}$")
 plt.yscale("log")
 plt.xscale("log")
 
+plt.show()
 
 
+
+print(len(omega_GW))
 
 
 
@@ -513,6 +518,8 @@ def min_agg(funz, gradiente, b, *iniz_val):
 
     print("Premere n per non stampare.\n\n")
 
+    print("Premere g per visualizzare il grafico della soluzione trovata senza interrompere la ricerca.\n\n")
+
 
     print("Funzione calcolata con i valori iniziali:", funz(*iniz_val))
 
@@ -583,7 +590,7 @@ def min_agg(funz, gradiente, b, *iniz_val):
 
         if ( funz(*val) < funz(*provv)):
 
-            b= b/agg
+            b= b/agg_dis
 
             #list.pop(index) elimina la componente della lista di indice pari a index
             memory.pop(0)
@@ -593,7 +600,7 @@ def min_agg(funz, gradiente, b, *iniz_val):
         else:
 
             if( b<massimo_b):
-                b= b*agg
+                b= b*agg_sal
 
 
             for j in range(0, len(val)):
@@ -645,14 +652,39 @@ def min_agg(funz, gradiente, b, *iniz_val):
             print("\nModalità rapida\n")
             flag_l= 0
 
+        # se si preme g viene realizzato il grafico della soluzione trovata all'iterazione corrente senza interrompere la ricerca.
+
+        if( keyboard.is_pressed("g") ):
+
+
+            plt.plot(masse, val, color="orange", linestyle="", marker=".", markersize=7, label="soluzione individuata")
+            plt.plot(masse, val_iniz, color="lightcoral", linestyle="", marker=".", markersize= 7, label="valori iniziali")
+
+            if (disegna==True):
+
+                plt.plot(masse_graf, f_esatta, color="midnightblue", linestyle="-", marker="", label="soluzione corretta")
+
+            title="soluzione all'iterazione numero {0}".format(count)
+            plt.title(title)
+
+            plt.xlabel("massa [M_sole]")
+            plt.ylabel("f(m)")
+
+
+            plt.tight_layout()
+            plt.legend()
+
+            plt.show()
+
+
 
 
         if ( flag_s==1 ):
 
             print("iterazione= {:}, b= {:.1e}, rapporto= {:.10e}".format(count, b, funz(*val)/funz(*iniz_val)))
-
+            '''
             print(memory)
-
+            '''
 
 
         if ( flag_l==1 and flag_s==1 ):
@@ -766,13 +798,15 @@ def grafici(graf, val, tipologia ):
     plt.ylabel("f(m)")
 
 
-    plt.plot(masse, val, color="blue", linestyle="", marker="o")
+    plt.plot(masse, val, color="orange", linestyle="", marker=".", markersize=7, label="soluzione individuata")
+    plt.plot(masse, val_iniz, color="lightcoral", linestyle="", marker=".", markersize= 7, label="valori iniziali")
 
     if (disegna==True):
 
-        plt.plot(masse_graf, f_esatta, color="red", linestyle="-", marker="")
+        plt.plot(masse_graf, f_esatta, color="midnightblue", linestyle="-", marker="", label="soluzione corretta")
 
     plt.tight_layout()
+    plt.legend()
 
     return
 

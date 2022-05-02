@@ -6,7 +6,7 @@ file_name_f_m="C:\\Users\\39366\\Dropbox\\PC\\Documents\\GitHub\\Tesi-Magistrale
 
 K=50
 
-m_min=0
+m_min=1
 m_max=30
 
 
@@ -16,10 +16,10 @@ iniz=np.zeros(K)
 
 #da 13 a 17 sale e poi da 18 a 22 scende
 
-for i in range(13, 18):
+for i in range(12, 17):
     iniz[i]= 40/5 + iniz[i-1]
 
-for i in range(18, 22):
+for i in range(17, 21):
     iniz[i]= iniz[i-1] - 40/4
 
 
