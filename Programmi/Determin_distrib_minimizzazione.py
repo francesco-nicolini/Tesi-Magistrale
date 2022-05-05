@@ -11,7 +11,7 @@ import keyboard
 N=5000
 
 # K contiene il numero di valori della funzione che si vogliono calcolare (ossia il numero delle variabili)
-K=16
+K=50
 
 
 # Estremo superiore e estremo inferiore delle masse considerate nell'integrale e scarto tra due masse consecutive
@@ -191,7 +191,7 @@ plt.show()
 
 
 
-print(len(omega_GW))
+print("La dimensione del vettore contenente i valori di Omega_GW è pari a {0}".format(len(omega_GW)))
 
 
 
@@ -298,6 +298,7 @@ for i in range(0, K):
 
 
 
+
 # CREAZIONE DELLA FUNZIONE DA MINIMIZZARE E CALCOLO DELLE SUE DERIVATE PARZIALI
 
 # Questa è la funzione di cui si derve cercare il minimo
@@ -310,6 +311,7 @@ def funz_da_minim(*var):
         somma=somma + (funz[i](*var))**2
 
     return somma
+
 
 
 # Funzione per il calcolo delle derivate parziali della funzione funz_da_minim (index è l'indice della variabile rispetto alla quale si vuole calcolare la derivata parziale)
@@ -503,9 +505,9 @@ def min_barriera(funz, gradiente, bar, rho, b, *iniz_val):
 # Funzione che si basa sul gradiente come per min_sempl() ma in cui il passo è aggiornato ogni volta (vedi scelta modo all'inzio del programma). funz è la funzione da minimizzare, gradinete il gradiente di quest'ultima, b è il valore iniziale per lo scalre che moltiplica il gradiente quando si calcola il passo successivo dell'iterazione, iniz_val sono i valori iniziali, K è il numero delle variabili, soglia è il valore che deve raggiungere lo scalare affinche la ricerca termini, agg è il valore usato per aggiornare il passo, massimo_b è il valore che il passo non deve superare per evitare overflow e dim_loop è la dimensione dell'array che serve a capire se si ha un loop ( K, soglia, agg, massimo_b e dim_loop sono variabili globali quindi non devono essere fornite alla funzione). La funzione restituisce i valori che minimizzano e un lista contenente i valori trovat ad ogni iterazione in modo da poter effettuare dei grafici con l'andamento delle soluzioni al variare del numero di iterazioni. Restituisce prima le soluzioni e poi la lista.
 
 
-def min_agg(funz, gradiente, b, *iniz_val):
+def min_agg(funzione, gradiente, b, *iniz_val):
 
-    global K, soglia, agg, massimo_b, dim_loop
+    global K, soglia, agg, massimo_b, dim_loop, funz
 
 
     print("\n\nPremere t per far terminare il programma e osservare i risultati ottenuti senza che la condizione sul passo sia stata eseguita.\n\n")
@@ -521,7 +523,7 @@ def min_agg(funz, gradiente, b, *iniz_val):
     print("Premere g per visualizzare il grafico della soluzione trovata senza interrompere la ricerca.\n\n")
 
 
-    print("Funzione calcolata con i valori iniziali:", funz(*iniz_val))
+    print("Funzione calcolata con i valori iniziali:", funzione(*iniz_val))
 
 
     # Vettori introdotti per poter fare i grafici finali
@@ -577,6 +579,17 @@ def min_agg(funz, gradiente, b, *iniz_val):
     flag_s= 1
 
 
+
+    # se si realizza il grafico della soluzione attualmente individuata, viene anche disegnato il grafico della differenza tra Omega_GW (omega_ora) calcolato con la soluzione attuale e la forma esatta e i valori di Omega_GW determinati a partire dai valori iniziali (omega_iniz) a cui vengono sempre sottratti i valori esatti.
+
+    omega_iniz= np.zeros(K)
+    omega_ora= np.zeros(K)
+
+
+    for i in range(0, K):
+        omega_iniz[i]= funz[i](*val)
+
+
     # Ciclo con le iterazioni
 
     while(b > soglia):
@@ -588,7 +601,7 @@ def min_agg(funz, gradiente, b, *iniz_val):
 
 
 
-        if ( funz(*val) < funz(*provv)):
+        if ( funzione(*val) < funzione(*provv)):
 
             b= b/agg_dis
 
@@ -657,6 +670,19 @@ def min_agg(funz, gradiente, b, *iniz_val):
         if( keyboard.is_pressed("g") ):
 
 
+            title="Soluzione all'Iterazione Numero {0}".format(count)
+            plt.suptitle(title, fontsize=13)
+
+
+
+            # grafico della soluzione
+
+
+            plt.subplot(2,1,1)
+
+            plt.title("Valori di f(m) Individuati", fontsize=12)
+
+
             plt.plot(masse, val, color="orange", linestyle="", marker=".", markersize=7, label="soluzione individuata")
             plt.plot(masse, val_iniz, color="lightcoral", linestyle="", marker=".", markersize= 7, label="valori iniziali")
 
@@ -664,11 +690,27 @@ def min_agg(funz, gradiente, b, *iniz_val):
 
                 plt.plot(masse_graf, f_esatta, color="midnightblue", linestyle="-", marker="", label="soluzione corretta")
 
-            title="soluzione all'iterazione numero {0}".format(count)
-            plt.title(title)
 
-            plt.xlabel("massa [M_sole]")
-            plt.ylabel("f(m)")
+            plt.xlabel("massa [M_sole]", fontsize=10)
+            plt.ylabel("f(m)", fontsize=10)
+
+            # grafico di Omega_GW
+
+            plt.subplot(2,1,2)
+
+            for i in range(0, K):
+                omega_ora[i]= funz[i](*val)
+
+            plt.title("Confronto tra $\\Omega_{GW}$ Calcolato con i Valori Individuati e $\\Omega_{GW}$ Esatto", fontsize=12)
+
+
+
+            plt.plot(freq, omega_iniz, color="red", linestyle="-", label="con valori iniziali")
+            plt.plot(freq, omega_ora, color="blue", linestyle="-", label=" con valori attuali")
+
+
+            plt.xlabel("f [Hz]", fontsize=10)
+            plt.ylabel("$\\Delta\\Omega_{GW}$", fontsize=10)
 
 
             plt.tight_layout()
@@ -681,7 +723,7 @@ def min_agg(funz, gradiente, b, *iniz_val):
 
         if ( flag_s==1 ):
 
-            print("iterazione= {:}, b= {:.1e}, rapporto= {:.10e}".format(count, b, funz(*val)/funz(*iniz_val)))
+            print("iterazione= {:}, b= {:.1e}, rapporto= {:.10e}".format(count, b, funzione(*val)/funzione(*iniz_val)))
             '''
             print(memory)
             '''
@@ -705,10 +747,10 @@ def min_agg(funz, gradiente, b, *iniz_val):
     print("\nSoluzioni:\n",val,"\n")
 
     print("Funzione calcolate con i valori delle variabili individuati mediante il metodo \"Semplice con passo aggoirnato\":")
-    print("f =", funz(*val))
+    print("f =", funzione(*val))
 
     print("\nRapporto tra la funzione calcolata dopo aver eseguito l'algoritmo e la funzione calcolata con i valori iniziali:")
-    print("rapporto=",funz(*val)/funz(*iniz_val))
+    print("rapporto=",funzione(*val)/funzione(*iniz_val))
 
     print("\nComponente in modulo piu grande del gradiente calcolato con le soluzioni finali: ")
 
