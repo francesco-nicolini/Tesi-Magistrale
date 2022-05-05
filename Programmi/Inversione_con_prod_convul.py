@@ -11,7 +11,7 @@ import keyboard
 N=5000
 
 # K contiene il numero di valori della funzione che si vogliono calcolare (ossia il numero delle variabili)
-K=100
+K=50
 
 
 # Estremo superiore e estremo inferiore delle masse considerate nell'integrale e scarto tra due masse consecutive
@@ -146,8 +146,6 @@ plt.ylabel("$\\Omega_{GW}$")
 plt.yscale("log")
 plt.xscale("log")
 
-plt.show()
-
 
 
 
@@ -241,6 +239,8 @@ if ( disegna==True ):
     asse_conv= np.linspace(0, len(conv), len(conv), endpoint=False)
 
 
+    fig=plt.figure()
+
     plt.plot(asse_F_M, F_M, linestyle="-", color="blue", label="Soluzione Sistema")
     plt.plot(asse_conv, conv, linestyle="-", color="orange", label="Convoluzione Soluzione Corretta")
 
@@ -271,7 +271,6 @@ if ( disegna==True ):
     plt.legend()
     plt.tight_layout()
 
-    plt.show()
 
 
 
@@ -280,15 +279,26 @@ if ( disegna==True ):
 
 # DETERMINAZIONE DI f(m) E SUA RAPPRESENTAZIONE
 
-
+# calcolo della trasformata
 tras= np.fft.fft(F_M)
 
+n= F_M.size
+dm= masse[1] - masse[0]
+k_masse= np.fft.fftfreq( n, d=dm)
+
+
+# calcolo di f_m
 f_m= np.fft.ifft( np.sqrt(tras/2) )
 
+n= tras.size
+dk= k_masse[1] - k_masse[0]
+masse_f_m= np.fft.fftfreq( n, d=dk)
+masse_f_m= np.fft.fftshift(masse_f_m)
 
-masse_f_m= np.fft.fftfreq()
+fig= plt.figure()
 
-plt.plot(masse_f_m, f_m, linestyle="-", color="blue", label="Soluzione Individuata")
+plt.plot(masse_f_m, abs(f_m), linestyle="-", color="blue", label="Soluzione Individuata")
+
 
 if ( disegna==True ):
 
@@ -298,6 +308,8 @@ if ( disegna==True ):
 plt.title("FUNZIONE LOGARITMICA DI MASSA")
 plt.xlabel("Massa [M_sole]")
 plt.ylabel("f(m)")
+
+plt.legend()
 
 plt.tight_layout()
 plt.show()

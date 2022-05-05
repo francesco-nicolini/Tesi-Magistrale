@@ -694,6 +694,8 @@ def min_agg(funzione, gradiente, b, *iniz_val):
             plt.xlabel("massa [M_sole]", fontsize=10)
             plt.ylabel("f(m)", fontsize=10)
 
+            plt.legend()
+
             # grafico di Omega_GW
 
             plt.subplot(2,1,2)
@@ -706,11 +708,14 @@ def min_agg(funzione, gradiente, b, *iniz_val):
 
 
             plt.plot(freq, omega_iniz, color="red", linestyle="-", label="con valori iniziali")
-            plt.plot(freq, omega_ora, color="blue", linestyle="-", label=" con valori attuali")
+            plt.plot(freq, omega_ora, color="blue", linestyle="-", label="con valori attuali")
 
 
             plt.xlabel("f [Hz]", fontsize=10)
             plt.ylabel("$\\Delta\\Omega_{GW}$", fontsize=10)
+
+            plt.yscale("log")
+            plt.xscale("log")
 
 
             plt.tight_layout()
