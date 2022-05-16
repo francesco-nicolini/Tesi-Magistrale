@@ -21,7 +21,7 @@ inv= np.fft.ifft(tras)
 n= tras.size
 df= freq[1] - freq[0]
 time= np.fft.fftfreq(n, df)
-time=np.fft.fftshift(time)
+time= np.fft.fftshift(time)
 
 
 # se scrivo sin(omega*t), il periodo èverifica: omega*T=2*pi, quindi T=2*pi/omega e la frequenza nu che è 1/T vale omega/2*pi

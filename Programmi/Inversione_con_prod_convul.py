@@ -257,7 +257,7 @@ if ( disegna==True ):
 
 
     asse_x= np.linspace(minimo_x - wind_x, massimo_x + wind_x, 100)
-    plt.plot(asse_x, np.zeros(len(asse_x)), linestyle="-", color="black")
+    plt.plot(asse_x, np.zeros(len(asse_x)), linestyle="-", color="black", linewidth=0.8)
 
 
     plt.xlim(minimo_x - wind_x, massimo_x + wind_x)
