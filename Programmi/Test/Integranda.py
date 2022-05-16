@@ -202,7 +202,7 @@ for i in range(0, len(freq_graf)):
     if( omega==True ):
 
         Omega= omega_graf[i]
-        print("frequenza={:.2e}  omega= {:.2e}  massimo integranda= {:.2e}  rapporto= {:.2e}".format(nu, Omega, max(integranda), max(integranda)/Omega))
+        print("frequenza={:.2e}  omega= {:.2e}  ultimo valore integranda= {:.2e}  rapporto= {:.2e}".format(nu, Omega, integranda[-1], integranda[-1]/Omega))
 
         plt.title("Funzione Integranda Riscalata per $\\Omega_{GW}$ al Variare della Massa e per Diverse Frequenze", fontsize=15)
 
@@ -213,7 +213,7 @@ for i in range(0, len(freq_graf)):
 
     else:
 
-        print("frequenza={:.2e}  massimo integranda= {:.2e}".format(nu, max(integranda)))
+        print("frequenza={:.2e}  ultimo valore integranda= {:.2e}".format(nu, integranda[-1]))
 
         plt.title("Funzione Integranda al Variare della Massa per Diverse Frequenze", fontsize=15)
 

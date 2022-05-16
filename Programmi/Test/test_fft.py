@@ -10,6 +10,7 @@ sign= np.exp(-(t)**2)
 
 # calcolo trasformata
 tras= np.fft.fft(sign)
+print(len(tras))
 
 n= sign.size
 dt= t[1]-t[0]

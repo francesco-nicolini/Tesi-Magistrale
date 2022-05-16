@@ -7,11 +7,9 @@ import keyboard
 
 # OPZIONI VARIE
 
-# N contiene il numero delle iterazioni
-N=5000
 
 # K contiene il numero di valori della funzione che si vogliono calcolare (ossia il numero delle variabili)
-K=50
+K=2
 
 
 # Estremo superiore e estremo inferiore delle masse considerate nell'integrale e scarto tra due masse consecutive
@@ -148,7 +146,17 @@ plt.xscale("log")
 
 
 
+# Campionamento del vattore contenente Omega  e del vettore contenente le frequenze in mdo tale che abbia la giusta dimensione
 
+N= len(omega_GW)
+
+if( N!=K):
+
+    res= N%K
+    passo= int(N/K)
+
+    omega_GW= omega_GW[res::passo]
+    freq= freq[res::passo]
 
 
 
@@ -228,58 +236,6 @@ if ( np.allclose(np.dot(matrix, F_M), omega_GW) ):
 
 
 
-# GRAFICO CON IL CONFORNTO DELLA CONVOLUZIONE DELLA FUNZIONE ESATTA
-
-
-if ( disegna==True ):
-
-    asse_F_M= np.linspace(0, len(F_M), len(F_M), endpoint=False)
-
-    conv= 2*np.convolve( f_esatta, f_esatta, mode="full")
-    asse_conv= np.linspace(0, len(conv), len(conv), endpoint=False)
-
-
-    fig=plt.figure()
-
-    plt.plot(asse_F_M, F_M, linestyle="-", color="blue", label="Soluzione Sistema")
-    '''
-    plt.plot(asse_conv, conv, linestyle="-", color="orange", label="Convoluzione Soluzione Corretta")
-    '
-
-    minimo_x= min(np.amin(asse_F_M), np.amin(asse_conv))
-    massimo_x= max(np.amax(asse_F_M), np.amax(asse_conv))
-
-    minimo_y= min(np.amin(F_M), np.amin(conv))
-    massimo_y= max(np.amax(F_M), np.amax(conv))
-
-
-    wind_x= 100
-    wind_y= 1
-
-
-    asse_x= np.linspace(minimo_x - wind_x, massimo_x + wind_x, 100)
-    plt.plot(asse_x, np.zeros(len(asse_x)), linestyle="-", color="black", linewidth=0.8)
-
-
-    plt.xlim(minimo_x - wind_x, massimo_x + wind_x)
-    plt.ylim(minimo_y - wind_y, massimo_y + wind_y)
-    '''
-
-    plt.plot(asse_F_M, 0*asse_F_M, linestyle="-", color="black", linewidth=0.8)
-
-    plt.title("CONFRONTO DELLA SOLUZIONE DEL SISTEMA E DELLA CONVOLUZIONE DELLA SOLUZIONE CORRETTA")
-    plt.xlabel("N")
-    plt.ylabel("f(m)*f(m)")
-
-
-    plt.legend()
-    plt.tight_layout()
-
-
-
-
-
-
 
 # DETERMINAZIONE DI f(m) E SUA RAPPRESENTAZIONE
 
@@ -301,114 +257,102 @@ n= prod_conv.size
 dm= masse[1] - masse[0]
 k_masse= np.fft.fftfreq( n, d=dm)
 
-asse_x= np.fft.fftshift(k_masse)
-
-fig= plt.figure()
-
-plt.subplot(2,2,1)
-
-plt.title("Trasformata del Prodotto di Convoluzione (Componenete Reale)")
-
-plt.plot(asse_x, tras.real)
-plt.plot(asse_x, 0*asse_x, linestyle="-", color="black", linewidth=0.8)
-
-plt.xlim(min(asse_x), max(asse_x))
-
-plt.xlabel("Frequenza")
-plt.ylabel("Parte Reale")
-
-
-plt.subplot(2,2,3)
-
-plt.title("Trasformata del Prodotto di Convoluzione (Componenete Immaginaria)")
-
-plt.plot(asse_x, tras.imag)
-plt.plot(asse_x, 0*asse_x, linestyle="-", color="black", linewidth=0.8)
-
-plt.xlim(min(asse_x), max(asse_x))
-
-plt.xlabel("Frequenza")
-plt.ylabel("Parte Immaginaria")
-
-plt.subplot(2,2,2)
-
-plt.title("Trasformata del Prodotto di Convoluzione (Modulo)")
-
-plt.plot(asse_x, abs(tras))
-plt.plot(asse_x, 0*asse_x, linestyle="-", color="black", linewidth=0.8)
-
-plt.xlim(min(asse_x), max(asse_x))
-
-plt.xlabel("Frequenza")
-plt.ylabel("Modulo")
-
-plt.subplot(2,2,4)
-
-plt.title("Trasformata del Prodotto di Convoluzione (Fase)")
-
-plt.plot(asse_x, np.angle(tras))
-plt.plot(asse_x, 0*asse_x, linestyle="-", color="black", linewidth=0.8)
-
-plt.xlim(min(asse_x), max(asse_x))
-
-plt.xlabel("Frequenza")
-plt.ylabel("Fase")
-
-plt.tight_layout()
 
 
 # calcolo di f_m
 
-uni= np.ones(len(tras))
+lun_tras= len(tras)
+print(lun_tras)
 
-for i in range(0, int(len(uni)/2)):
-
-    var= np.random.rand()
-
-    estraz= int(var + 0.5) - (1 - int(var + 0.5))
-
-    uni[i]= estraz
-    uni[len(uni)-1-i]= estraz
-
-#tras=tras*uni
-
-
-f_m= np.fft.ifft( np.sqrt(tras) )
+radice= np.sqrt(tras)
 
 n= tras.size
 dk= k_masse[1] - k_masse[0]
 masse_f_m= np.fft.fftfreq( n, d=dk)
 masse_f_m= np.fft.fftshift(masse_f_m)
 
-fig= plt.figure()
 
-plt.subplot(2,1,1)
+# ciclo per testare le varie fasi possibili (moltiplico f_m per +1 o -1)
 
-plt.plot(masse_f_m, abs(f_m), linestyle="-", color="blue", label="Soluzione Individuata")
+minimo_massimi= 10**10
+num_minimo= 0
 
-if ( disegna==True ):
+# memory serve solo per stampare la percentuale di completamento
+memory=12
 
-    plt.plot(masse_graf, f_esatta, linestyle="-", color="orange", label="Soluzione Esatta")
+numero= 0
 
+while( numero<2**(lun_tras) ):
 
+    lista_1= [ int(x) for x in str(bin(numero))[2:] ]
 
-plt.title("FUNZIONE LOGARITMICA DI MASSA")
-plt.xlabel("Massa [M_sole]")
-plt.ylabel("f(m)")
+    lung= len(lista_1)
 
-plt.legend()
+    if( lun_tras>lung ):
 
+        for i in range(0, lung):
 
-plt.subplot(2,1,2)
-
-plt.title("Fase")
-
-plt.plot(masse_f_m, np.angle(f_m), linestyle="", marker=".", color="blue", label="Soluzione Individuata")
-
+            if ( not lista_1[i] ):
+                lista_1[i]= -1
 
 
-plt.tight_layout()
-plt.show()
+        lista_2= (lun_tras-lung)*[-1]
+
+        lista= lista_2 + lista_1
+
+    else:
+
+        lista= lista_1
+
+        for i in range(0, lung):
+
+            if ( not lista[i] ):
+                lista[i]= -1
+
+
+    for i in range(0, lun_tras):
+
+        radice[i]*= lista[i]
+
+
+
+    f_m= np.fft.ifft( radice )
+
+    massimo= max( abs(f_m)[:int(len(f_m)/2)] )
+
+    if( massimo<minimo_massimi):
+
+        minimo_massimi= massimo
+        num_minimo= numero
+
+
+    numero= numero + 1
+
+    percentuale= int( 100*numero / (2**(lun_tras)) )
+
+    if(  percentuale%10==0 and percentuale!=memory ):
+        print("{0} %".format(percentuale))
+        memory= percentuale
+
+
+# con num_minimo posso risalire alla seguenza di 1 e -1
+
+print("\n\nLista di 1 e -1 per cui il massimo della parte negativa di f(m) è il più piccolo possibile:")
+lista= [ int(x) for x in str(bin(num_minimo))[2:] ]
+
+for i in range(0, len(lista)):
+    if( not lista[i] ):
+        lista[i]=-1
+
+
+print(lista)
+
+print("\nValore più piccolo tra i massimi delle parti negative delle varie f(m): {:.2e}".format(minimo_massimi))
+
+
+
+
+
 
 
 
