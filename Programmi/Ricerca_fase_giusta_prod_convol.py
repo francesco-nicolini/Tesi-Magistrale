@@ -9,8 +9,10 @@ import keyboard
 
 
 # K contiene il numero di valori della funzione che si vogliono calcolare (ossia il numero delle variabili)
-K=2
+K=22
 
+# num_zeri contiene il numero di zeri da attaccare al vettore contente il prodtto di convoluzione. In particolare ne vengono aggiunti 2*num_zeri all'inizio e 1*num_zeri alla fine
+num_zeri= 2
 
 # Estremo superiore e estremo inferiore delle masse considerate nell'integrale e scarto tra due masse consecutive
 m_min=1
@@ -34,6 +36,8 @@ file_name_f_m="C:\\Users\\39366\\Dropbox\\PC\\Documents\\GitHub\\Tesi-Magistrale
 # Estremo superiore e estremo inferiore delle frequenze considerate (da selezionare solo se option è diverso da "read")
 freq_min=10**(-8)
 freq_max=10**(1)
+
+
 
 
 
@@ -231,7 +235,7 @@ F_M= np.linalg.solve( matrix, omega_GW)
 
 if ( np.allclose(np.dot(matrix, F_M), omega_GW) ):
 
-    print("Soluzione individuata")
+    print("E' stata individuata una soluzione.")
 
 
 
@@ -239,14 +243,18 @@ if ( np.allclose(np.dot(matrix, F_M), omega_GW) ):
 
 # DETERMINAZIONE DI f(m) E SUA RAPPRESENTAZIONE
 
-prod_conv= np.zeros(4*len(F_M)+1 )
+prod_conv= np.zeros(len(F_M)+1 + 3*num_zeri )
 
 
 for i in range(0, len(F_M)):
 
-    prod_conv[2*len(F_M)+1 + i]= F_M[i]
+    prod_conv[2*num_zeri+1 + i]= F_M[i]
 
-print(prod_conv)
+print("\n\nLa soluzione individuata, con l'aaagiunta di zeri per stabilizare la soluzione finale è la seguente:")
+
+for i in range(0, len(prod_conv)):
+
+    print(prod_conv[i])
 
 
 
@@ -259,20 +267,17 @@ k_masse= np.fft.fftfreq( n, d=dm)
 
 
 
-# calcolo di f_m
+# CALCOLO DI f(m)
 
 lun_tras= len(tras)
-print(lun_tras)
 
 radice= np.sqrt(tras)
 
-n= tras.size
-dk= k_masse[1] - k_masse[0]
-masse_f_m= np.fft.fftfreq( n, d=dk)
-masse_f_m= np.fft.fftshift(masse_f_m)
-
 
 # ciclo per testare le varie fasi possibili (moltiplico f_m per +1 o -1)
+
+print("\n\n\n")
+
 
 minimo_massimi= 10**10
 num_minimo= 0
@@ -316,7 +321,7 @@ while( numero<2**(lun_tras) ):
 
 
 
-    f_m= np.fft.ifft( radice )
+    f_m= np.fft.ifft(radice)
 
     massimo= max( abs(f_m)[:int(len(f_m)/2)] )
 
@@ -330,15 +335,48 @@ while( numero<2**(lun_tras) ):
 
     percentuale= int( 100*numero / (2**(lun_tras)) )
 
-    if(  percentuale%10==0 and percentuale!=memory ):
+    if(  percentuale%5==0 and percentuale!=memory ):
         print("{0} %".format(percentuale))
         memory= percentuale
 
 
 # con num_minimo posso risalire alla seguenza di 1 e -1
 
+
+
+
+# RICOSTRUZIONE DELLA LISTA CHE MINIMIZZA LA PARTE NEGATIVA DI f(m)
+
+
 print("\n\nLista di 1 e -1 per cui il massimo della parte negativa di f(m) è il più piccolo possibile:")
-lista= [ int(x) for x in str(bin(num_minimo))[2:] ]
+
+lista_1= [ int(x) for x in str(bin(num_minimo))[2:] ]
+
+
+lung= len(lista_1)
+
+if( lun_tras>lung ):
+
+    for i in range(0, lung):
+
+        if ( not lista_1[i] ):
+            lista_1[i]= -1
+
+
+    lista_2= (lun_tras-lung)*[-1]
+
+    lista= lista_2 + lista_1
+
+else:
+
+    lista= lista_1
+
+    for i in range(0, lung):
+
+        if ( not lista[i] ):
+            lista[i]= -1
+
+
 
 for i in range(0, len(lista)):
     if( not lista[i] ):
@@ -349,6 +387,56 @@ print(lista)
 
 print("\nValore più piccolo tra i massimi delle parti negative delle varie f(m): {:.2e}".format(minimo_massimi))
 
+
+
+# RICOSTRUZIONE f(m) CON LA PARTE NEGATIVA PIU' PICCOLA
+
+
+for i in range(0, lun_tras):
+
+    radice[i]*= lista[i]
+
+
+f_m= np.fft.ifft(radice)
+
+n= tras.size
+dk= k_masse[1] - k_masse[0]
+masse_f_m= np.fft.fftfreq( n, d=dk)
+masse_f_m= np.fft.fftshift(masse_f_m)
+
+
+
+# REALIZZAZIONE DEL GRAFICO DELLA f(m) CON LA PARTE NEGATIVA PIU' PICCOLA
+
+fig= plt.figure()
+
+plt.subplot(2,1,1)
+
+plt.plot(masse_f_m, abs(f_m), linestyle="-", color="blue", label="Soluzione Individuata")
+
+if ( disegna==True ):
+
+    plt.plot(masse_graf, f_esatta, linestyle="-", color="orange", label="Soluzione Esatta")
+
+
+
+plt.title("FUNZIONE LOGARITMICA DI MASSA")
+plt.xlabel("Massa [M_sole]")
+plt.ylabel("f(m)")
+
+plt.legend()
+
+
+plt.subplot(2,1,2)
+
+plt.title("Fase")
+
+plt.plot(masse_f_m, np.angle(f_m), linestyle="", marker=".", color="blue", label="Soluzione Individuata")
+
+
+
+plt.tight_layout()
+plt.show()
 
 
 
