@@ -7,7 +7,7 @@ from scipy.integrate import dblquad
 
 
 # num contiene il numero di frequenze usate per realizzare il grafico
-num=50
+num=500
 
 # freq_min e fre_max contengono il massimo valore della frequenza e il minimo (l'intervallo delle frequenze è creato in scala logaritmica
 freq_min=10**(-8)

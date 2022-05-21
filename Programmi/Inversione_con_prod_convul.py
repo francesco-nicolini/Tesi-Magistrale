@@ -203,7 +203,7 @@ def fun_mat(freq, M):
                 a[i][j]= integ(M[j], nu)
 
 
-    dM= (M[-1] - M[0])/(K-1)
+    dM= (M[1] - M[0])/(K-1)
 
     return dM*a
 
@@ -235,7 +235,7 @@ if ( disegna==True ):
 
     asse_F_M= np.linspace(0, len(F_M), len(F_M), endpoint=False)
 
-    conv= 2*np.convolve( f_esatta, f_esatta, mode="full")
+    conv= np.convolve( f_esatta, f_esatta, mode="full")
     asse_conv= np.linspace(0, len(conv), len(conv), endpoint=False)
 
 

@@ -9,10 +9,10 @@ import keyboard
 
 
 # K contiene il numero di valori della funzione che si vogliono calcolare (ossia il numero delle variabili)
-K=22
+K= 17
 
 # num_zeri contiene il numero di zeri da attaccare al vettore contente il prodtto di convoluzione. In particolare ne vengono aggiunti 2*num_zeri all'inizio e 1*num_zeri alla fine
-num_zeri= 2
+num_zeri= 3
 
 # Estremo superiore e estremo inferiore delle masse considerate nell'integrale e scarto tra due masse consecutive
 m_min=1
@@ -276,7 +276,7 @@ radice= np.sqrt(tras)
 
 # ciclo per testare le varie fasi possibili (moltiplico f_m per +1 o -1)
 
-print("\n\n\n")
+print("\n\n\nPercentuale di completamento:")
 
 
 minimo_massimi= 10**10
@@ -336,7 +336,13 @@ while( numero<2**(lun_tras) ):
     percentuale= int( 100*numero / (2**(lun_tras)) )
 
     if(  percentuale%5==0 and percentuale!=memory ):
-        print("{0} %".format(percentuale))
+
+        if( percentuale<10 ):
+            print(" {0} %".format(percentuale))
+
+        else:
+            print("{0} %".format(percentuale))
+
         memory= percentuale
 
 
@@ -420,7 +426,8 @@ if ( disegna==True ):
 
 
 
-plt.title("FUNZIONE LOGARITMICA DI MASSA")
+plt.suptitle("FUNZIONE LOGARITMICA DI MASSA")
+plt.title("{0}".format(lista), fontsize=40/np.sqrt(K+3*num_zeri))
 plt.xlabel("Massa [M_sole]")
 plt.ylabel("f(m)")
 
@@ -429,7 +436,10 @@ plt.legend()
 
 plt.subplot(2,1,2)
 
-plt.title("Fase")
+plt.title("Fase di f(m)")
+
+plt.xlabel("Massa [M_sole]")
+plt.ylabel("Fase")
 
 plt.plot(masse_f_m, np.angle(f_m), linestyle="", marker=".", color="blue", label="Soluzione Individuata")
 
