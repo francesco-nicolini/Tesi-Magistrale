@@ -179,20 +179,19 @@ def fun_mat(freq, M):
                 #print("integ= {0}".format(integ(M[0], freq[0])[int(K/2)]/2))
                 #print("tipo integ= {0}".format(type(integ(M[0], freq[0])/2)))
 
-                a[i][j]= integ(massa, nu)[int(K/2)]/2
+                a[i][j]= integ(massa, nu)/2
 
             else:
 
-                a[i][j]= integ(massa, nu)[int(K/2)]
+                a[i][j]= integ(massa, nu)
 
 
 
-    dM= (M[1] - M[0])/(K-1)
+    dM= (M[-1] - M[0])/(K-1)
 
     return dM*a
 
 
-print(integ(masse[0], freq[0]),"\n\n")
 
 
 # COSTRUZIONE DEL PRODOTTO DI CONVOLUZIONE
@@ -207,7 +206,7 @@ def f_m(m, mu, sigma):
 
 
 # convoluzione
-
+'''
 masse= np.linspace(0, 30, K)
 
 mu= 10
@@ -222,6 +221,45 @@ asse_conv= np.linspace(0, len(conv), len(conv), endpoint=False)*dM
 figure=plt.figure()
 
 plt.plot(asse_conv[::2], conv[::2])
+'''
+
+mu= 10
+sigma= 1
+
+
+dM= masse[1] - masse[0]
+
+
+val_conv= masse
+
+conv= np.zeros(len(val_conv))
+
+
+
+for i in range(0, len(val_conv)):
+
+    integrale= 0
+
+    for j in range(0, len(masse)):
+
+        prod= f_m(masse[j], mu, sigma)*f_m(val_conv[i]-masse[j], mu, sigma)
+
+        if( j==0 or j==(K-1) ):
+            integrale+= dM*prod/2
+
+        else:
+            integrale+= dM*prod
+
+    conv[i]= integrale
+
+# grafico prodotto di convoluzione
+
+plt.title("Prodotto di convoluzione", fontsize=14)
+
+plt.xlabel("M [M_solare]", fontsize=10)
+plt.ylabel("f(m)*f(m)", fontsize=10)
+
+plt.plot(val_conv, conv, linestyle="-", marker="", color="blue")
 
 
 
@@ -231,33 +269,64 @@ masse= np.linspace(m_min, m_max, K)
 
 
 
-print(masse[0])
-
 matrix= fun_mat(freq, masse)
 
-omega_conv= np.dot(matrix, conv[::2])
+omega_conv= np.dot(matrix, conv)
 
 
+# CONFRONTO
+
+dif_max= 0
+i_max= 0
+
+for i in range(0, len(omega_GW)):
+
+    diff= abs( (omega_conv[i] - omega_GW[i])/omega_GW[i]  )
+
+    if( diff> dif_max ):
+        dif_max= diff
+        i_max= i
+
+
+print("Il valore massimo della differenza relativa ( modulo di omega ottenuto con convoluzione meno omega \"esatto\" diviso quest'ultimo) è pari a {:.2e} e corrisponede alla frequenza {:.2e}".format(dif_max, freq[i_max]))
 
 
 
 # GRAFICI
 
-fig, ax = plt.subplots()
+fig, ax = plt.subplots(2)
 
-ax.plot(freq, omega_GW, linestyle="-", color="blue", label="Soluzione Esatta")
-ax.plot(freq, omega_conv, linestyle="-", color="red", label="Calcolo con Prodotto\ndi Convoluzione")
+ax[0].plot(freq, omega_GW, linestyle=(0, (1, 1)), color="blue", label="Soluzione Esatta")
+ax[0].plot(freq, omega_conv, linestyle="--", color="red", label="Calcolo con Prodotto\ndi Convoluzione")
 
 
-plt.title("$\\Omega_{GW}$ in funzione della frequenza")
-plt.xlabel("f [Hz]")
-plt.ylabel("$\\Omega_{GW}$")
-plt.yscale("log")
-plt.xscale("log")
+ax[0].set_title("$\\Omega_{GW}$ in funzione della frequenza", fontsize=14)
+ax[0].set_xlabel("f [Hz]", fontsize=10)
+ax[0].set_ylabel("$\\Omega_{GW}$", fontsize=10)
+ax[0].set_xscale("log")
+ax[0].set_yscale("log")
 
-plt.legend()
+ax[0].legend()
 
+
+scarto= (omega_conv-omega_GW)/omega_GW
+
+ax[1].plot(freq, abs(scarto), linestyle="-", color="blue")
+
+
+ax[1].set_title("Differenza Relativa tra le $\\Omega_{GW}$ ", fontsize=14)
+ax[1].set_xlabel("f [Hz]", fontsize=10)
+ax[1].set_ylabel("$|\\Delta\\Omega_{GW}/\\Omega_{GW}|$", fontsize=10)
+ax[1].set_xscale("log")
+ax[1].set_yscale("log")
+
+
+
+
+plt.tight_layout()
 plt.show()
+
+
 
 
 
