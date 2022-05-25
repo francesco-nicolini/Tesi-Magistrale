@@ -203,7 +203,7 @@ def fun_mat(freq, M):
                 a[i][j]= integ(M[j], nu)
 
 
-    dM= (M[1] - M[0])/(K-1)
+    dM= (M[-1] - M[0])/(K-1)
 
     return dM*a
 

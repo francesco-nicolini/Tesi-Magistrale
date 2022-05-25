@@ -303,6 +303,7 @@ ax[0].plot(freq, omega_conv, linestyle="--", color="red", label="Calcolo con Pro
 ax[0].set_title("$\\Omega_{GW}$ in funzione della frequenza", fontsize=14)
 ax[0].set_xlabel("f [Hz]", fontsize=10)
 ax[0].set_ylabel("$\\Omega_{GW}$", fontsize=10)
+ax[0].set_xlim(min(freq), max(freq))
 ax[0].set_xscale("log")
 ax[0].set_yscale("log")
 
@@ -313,10 +314,14 @@ scarto= (omega_conv-omega_GW)/omega_GW
 
 ax[1].plot(freq, abs(scarto), linestyle="-", color="blue")
 
+ax[1].plot( freq[i_max], dif_max, marker=".", color="blue")
+ax[1].text( freq[i_max], dif_max, "{:.2e}".format(dif_max), horizontalalignment="right")
 
 ax[1].set_title("Differenza Relativa tra le $\\Omega_{GW}$ ", fontsize=14)
 ax[1].set_xlabel("f [Hz]", fontsize=10)
 ax[1].set_ylabel("$|\\Delta\\Omega_{GW}/\\Omega_{GW}|$", fontsize=10)
+ax[1].set_xlim(min(freq), max(freq))
+ax[1].set_ylim(10**(-13), 10**(-5))
 ax[1].set_xscale("log")
 ax[1].set_yscale("log")
 
