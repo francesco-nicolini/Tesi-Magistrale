@@ -1,17 +1,16 @@
 import numpy as np
+from numpy.linalg import eig
 import matplotlib.pyplot as plt
 import math
-import keyboard
+
 
 
 
 # OPZIONI VARIE
 
-# N contiene il numero delle iterazioni
-N=5000
 
 # K contiene il numero di valori della funzione che si vogliono calcolare (ossia il numero delle variabili)
-K=500
+K=5
 
 # Estremo superiore e estremo inferiore delle masse considerate nell'integrale e scarto tra due masse consecutive
 m_min=1
@@ -122,6 +121,28 @@ else:
     omega_GW=funz_omeg(freq)
 
 
+# Campionamento del vettore omega_GW e del vettore freq in modo che abbia una dimensione pari a K
+
+
+lung= len(omega_GW)
+
+
+rap= int( lung/K )
+res= lung%K
+
+
+if(res==0):
+
+    omega_GW= omega_GW[rap-1::rap]
+    freq= freq[rap-1::rap]
+
+else:
+    omega_GW= omega_GW[res-1+rap::rap]
+    freq= freq[res-1+rap::rap]
+
+
+print("lunghezza Omega_GW= {0}, numero variabili= {1}".format(len(omega_GW), K))
+
 
 
 
@@ -170,19 +191,11 @@ def fun_mat(freq, M):
 
             massa= M[j]
 
-            #print("massa=  {0}, nu={1}\n".format( massa, nu))
-            #print("tipo massa=  {0}, tipo nu={1}\n".format( type(massa), type(nu)))
-
 
             if ( j==0 or j==(K-1) ):
-
-                #print("integ= {0}".format(integ(M[0], freq[0])[int(K/2)]/2))
-                #print("tipo integ= {0}".format(type(integ(M[0], freq[0])/2)))
-
                 a[i][j]= integ(massa, nu)/2
 
             else:
-
                 a[i][j]= integ(massa, nu)
 
 
@@ -192,163 +205,40 @@ def fun_mat(freq, M):
     return dM*a
 
 
+# RICERCA AUTOVALORI E AUTOVETTORI DELLA MATRICE
 
+matrix= fun_mat(freq, masse)/omega_GW
 
-# COSTRUZIONE DEL PRODOTTO DI CONVOLUZIONE
+lamb, v= eig(matrix)
 
 
-# definizione di f(m)
 
-def f_m(m, mu, sigma):
+# creazione di una matrice 2*K in cui ogni riga contiene un'autovalore e il suo corrispondente autovettore. Tale matrice è realizzata così da avere gli autovettori legati ai loro corrispondenti autovettori e quindi non avere problemi quando poi questi vengono ordinati in senso decrescente
 
-    return (m**2/np.sqrt(2*math.pi*sigma**2))*np.exp(-(m-mu)**2/(2*sigma**2))
+autovett= []
 
+for i in range(0, len(lamb)):
 
+    rig=[]
+    autovett.append(rig)
 
-# convoluzione
-'''
-masse= np.linspace(0, 30, K)
 
-mu= 10
-sigma= 1
 
-a= f_m(masse, mu, sigma)
-b= a
+for i in range(0, len(lamb)):
 
-conv= dM*np.convolve(a, b, mode="full")
-asse_conv= np.linspace(0, len(conv), len(conv), endpoint=False)*dM
+    autovett[i].append(lamb[i].real)
+    autovett[i].append(v[i].real)
 
-figure=plt.figure()
 
-plt.plot(asse_conv[::2], conv[::2])
-'''
 
-mu= 10
-sigma= 1
+autovett= np.array(autovett)
+autovett= autovett[(-autovett)[:,0].argsort()]
 
 
-dM= masse[1] - masse[0]
 
+for i in range(0, len(lamb)):
 
-val_conv= masse
-
-conv= np.zeros(len(val_conv))
-
-
-
-for i in range(0, len(val_conv)):
-
-    integrale= 0
-
-    for j in range(0, len(masse)):
-
-        prod= f_m(masse[j], mu, sigma)*f_m(val_conv[i]-masse[j], mu, sigma)
-
-        if( j==0 or j==(K-1) ):
-            integrale+= dM*prod/2
-
-        else:
-            integrale+= dM*prod
-
-    conv[i]= integrale
-
-# grafico prodotto di convoluzione
-
-plt.title("Prodotto di convoluzione", fontsize=14)
-
-plt.xlabel("M [M_solare]", fontsize=10)
-plt.ylabel("f(m)*f(m)", fontsize=10)
-
-plt.plot(val_conv, conv, linestyle="-", marker="", color="blue")
-
-
-
-# CALCOLO DI OMEGA
-
-masse= np.linspace(m_min, m_max, K)
-
-
-
-matrix= fun_mat(freq, masse)
-
-omega_conv= np.dot(matrix, conv)
-
-
-# CONFRONTO
-
-dif_max= 0
-i_max= 0
-
-for i in range(0, len(omega_GW)):
-
-    diff= abs( (omega_conv[i] - omega_GW[i])/omega_GW[i]  )
-
-    if( diff> dif_max ):
-        dif_max= diff
-        i_max= i
-
-
-print("Il valore massimo della differenza relativa ( modulo di omega ottenuto con convoluzione meno omega \"esatto\" diviso quest'ultimo) è pari a {:.2e} e corrisponede alla frequenza {:.2e}".format(dif_max, freq[i_max]))
-
-
-
-# GRAFICI
-
-fig, ax = plt.subplots(2)
-
-ax[0].plot(freq, omega_GW, linestyle=(0, (1, 1)), color="blue", label="Soluzione Esatta")
-ax[0].plot(freq, omega_conv, linestyle="--", color="red", label="Calcolo con Prodotto\ndi Convoluzione")
-
-
-ax[0].set_title("$\\Omega_{GW}$ in funzione della frequenza", fontsize=14)
-ax[0].set_xlabel("f [Hz]", fontsize=10)
-ax[0].set_ylabel("$\\Omega_{GW}$", fontsize=10)
-ax[0].set_xlim(min(freq), max(freq))
-ax[0].set_xscale("log")
-ax[0].set_yscale("log")
-
-ax[0].legend()
-
-
-scarto= (omega_conv-omega_GW)/omega_GW
-
-ax[1].plot(freq, abs(scarto), linestyle="-", color="blue")
-
-ax[1].plot( freq[i_max], dif_max, marker=".", color="blue")
-ax[1].text( freq[i_max], dif_max, "{:.2e}".format(dif_max), horizontalalignment="right")
-
-ax[1].set_title("Modulo della Differenza Relativa tra le $\\Omega_{GW}$ ", fontsize=14)
-ax[1].set_xlabel("f [Hz]", fontsize=10)
-ax[1].set_ylabel("$|\\Delta(\\Omega_{GW})/\\Omega_{GW}|$", fontsize=10)
-ax[1].set_xlim(min(freq), max(freq))
-ax[1].set_ylim(10**(-13), 10**(-5))
-ax[1].set_xscale("log")
-ax[1].set_yscale("log")
-
-
-
-
-plt.tight_layout()
-plt.show()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    print(autovett[i])
 
 
 

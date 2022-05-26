@@ -24,13 +24,13 @@ dm= (m_max - m_min)/(K-1)
 option="read"
 
 # Path del file se option è uguale a "read"
-file_name_omega="C:\\Users\\39366\\Dropbox\\PC\\Documents\\GitHub\\Tesi-Magistrale\\Programmi\\file_txt\\omega_GW.txt"
+file_name_omega="C:\\Users\\39366\\Dropbox\\PC\\Documents\\GitHub\\Tesi-Magistrale\\Programmi\\file_txt\\Ellisse\\omega_GW_ellisse.txt"
 
 # Se option è pari a "read" ponendo disegna uguale a True verra realizzato il grafico della soluzione esatta nello stesso piano in cui vengono rappresentate le soluzioni trovate minimizzando
 disegna=True
 
 # Path del file se disegna è uguale a True
-file_name_f_m="C:\\Users\\39366\\Dropbox\\PC\\Documents\\GitHub\\Tesi-Magistrale\\Programmi\\file_txt\\f_m.txt"
+file_name_f_m="C:\\Users\\39366\\Dropbox\\PC\\Documents\\GitHub\\Tesi-Magistrale\\Programmi\\file_txt\\Ellisse\\f_m_ellisse.txt"
 
 
 # Se metodo è uguale a "semplice" il minimo viene ricercato usando esclusivamente il gradiente.
@@ -165,6 +165,39 @@ else:
 
     freq=np.logspace(np.log10(freq_min), np.log10(freq_max), K)
     omega_GW=funz_omeg(freq)
+
+
+# Campionamento del vettore omega_GW in modo che abbia una dimensione pari a K
+
+
+lung= len(omega_GW)
+
+
+rap= int( lung/K )
+res= lung%K
+
+
+if(res==0):
+
+    omega_GW= omega_GW[rap-1::rap]
+    freq= freq[rap-1::rap]
+
+else:
+    omega_GW= omega_GW[res-1+rap::rap]
+    freq= freq[res-1+rap::rap]
+
+
+print("lunghezza Omega_GW= {0}, numero variabili= {1}".format(len(omega_GW), K))
+
+
+
+
+
+
+
+
+
+
 
 
 # Grafico di omega_GW
@@ -621,7 +654,6 @@ def min_agg(funzione, gradiente, b, *iniz_val):
 
 
         count= count + 1
-
 
 
 

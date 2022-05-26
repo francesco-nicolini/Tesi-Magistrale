@@ -39,7 +39,7 @@ omega= 1
 
 
 
-
+masse= np.linspace(1, 100000, 100000)
 
 
 
@@ -178,7 +178,7 @@ else:
 '''
 print("\n\nLa massima frequenza studiata è pari a {:.2e} Hz".format(max(freq_graf)))
 '''
-masse= np.linspace(1, 100000, 100000)
+
 
 fig= plt.figure()
 
@@ -202,8 +202,9 @@ for i in range(0, len(freq_graf)):
     if( omega==True ):
 
         Omega= omega_graf[i]
+        '''
         print("frequenza={:.2e}  omega= {:.2e}  ultimo valore integranda= {:.2e}  rapporto= {:.2e}".format(nu, Omega, integranda[-1], integranda[-1]/Omega))
-
+        '''
         plt.title("Funzione Integranda Riscalata per $\\Omega_{GW}$ al Variare della Massa e per Diverse Frequenze", fontsize=15)
 
         plt.ylabel("Funzione Integranda Riscalata", fontsize=12)
@@ -212,8 +213,9 @@ for i in range(0, len(freq_graf)):
 
 
     else:
-
+        '''
         print("frequenza={:.2e}  ultimo valore integranda= {:.2e}".format(nu, integranda[-1]))
+        '''
 
         plt.title("Funzione Integranda al Variare della Massa per Diverse Frequenze", fontsize=15)
 
@@ -223,9 +225,123 @@ for i in range(0, len(freq_graf)):
 
 
 plt.legend( title="frequenze", loc="upper left", bbox_to_anchor=(1, 1.0125))
+
+
+
+
+
+# PRODOTTO DI CONVOLUZIONE
+
+masse= np.linspace(1, 30, 10000)
+
+# definizione di f(m)
+
+def f_m(m, mu, sigma):
+
+    return (m**2/np.sqrt(2*math.pi*sigma**2))*np.exp(-(m-mu)**2/(2*sigma**2))
+
+
+
+# convoluzione
+
+masse_conv= np.linspace(1, 30, 500)
+
+mu= 10
+sigma= 1
+
+
+dM= masse_conv[1] - masse_conv[0]
+
+
+val_conv= masse
+
+conv= np.zeros(len(val_conv))
+
+
+
+for i in range(0, len(val_conv)):
+
+    integrale= 0
+
+    for j in range(0, len(masse_conv)):
+
+        prod= f_m(masse_conv[j], mu, sigma)*f_m(val_conv[i]-masse_conv[j], mu, sigma)
+
+        if( j==0 or j==(K-1) ):
+            integrale+= dM*prod/2
+
+        else:
+            integrale+= dM*prod
+
+    conv[i]= integrale
+
+
+
+
+# GRAFICO DI TUTTA LA FUNZIONE INTEGRANDA
+
+resto= len(freq)%camp
+
+if( resto==0 ):
+    freq_graf= freq[camp-1::camp]
+
+    if( omega==True ):
+        omega_graf= omega_GW[camp-1::camp]
+
+else:
+    freq_graf= freq[resto-1::camp]
+
+    if( omega==True ):
+        omega_graf= omega_GW[resto-1::camp]
+
+
+
+
+fig= plt.figure()
+
+plt.xlabel("M [M_sole]", fontsize=12)
+plt.xlim(min(masse)-1, max(masse))
+
+for i in range(0, len(freq_graf)):
+
+    nu= freq_graf[i]
+
+    integranda= integ(masse, nu)*conv
+
+    color= "C{0}".format(i)
+
+    if( 1<nu<10 ):
+        label= "{:.2} Hz".format(nu)
+
+    else:
+        label= "{:.2e} Hz".format(nu)
+
+    if( omega==True ):
+
+        Omega= omega_graf[i]
+        '''
+        print("frequenza={:.2e}  omega= {:.2e}  ultimo valore integranda= {:.2e}  rapporto= {:.2e}".format(nu, Omega, integranda[-1], integranda[-1]/Omega))
+        '''
+        plt.title("Funzione Integranda Completa Riscalata per $\\Omega_{GW}$ al Variare della Massa e per Diverse Frequenze", fontsize=15)
+
+        plt.ylabel("Funzione Integranda Completa Riscalata", fontsize=12)
+
+        plt.plot(masse, integranda/Omega, color=color, linestyle="-", marker="", label=label)
+
+
+    else:
+        '''
+        print("frequenza={:.2e}  ultimo valore integranda= {:.2e}".format(nu, integranda[-1]))
+        '''
+        plt.title("Funzione Integranda Completa al Variare della Massa per Diverse Frequenze", fontsize=15)
+
+        plt.ylabel("Funzione Integranda Completa", fontsize=12)
+
+        plt.plot(masse, integranda, color=color, linestyle="-", marker="", label=label)
+
+
+plt.legend( title="frequenze", loc="upper left", bbox_to_anchor=(1, 1.0125))
 plt.show()
-
-
 
 
 
