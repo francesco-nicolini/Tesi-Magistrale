@@ -207,7 +207,7 @@ def fun_mat(freq, M):
 
 # RICERCA AUTOVALORI E AUTOVETTORI DELLA MATRICE
 
-matrix= fun_mat(freq, masse)/omega_GW
+matrix= fun_mat(freq, masse)
 
 lamb, v= eig(matrix)
 
@@ -231,14 +231,160 @@ for i in range(0, len(lamb)):
 
 
 
-autovett= np.array(autovett)
-autovett= autovett[(-autovett)[:,0].argsort()]
+autovett= np.array(autovett, dtype=object)
+autovett= autovett[(-abs(autovett))[:,0].argsort()]
 
 
 
 for i in range(0, len(lamb)):
 
     print(autovett[i])
+
+
+
+# RICERCA DEI COEFFICIENTI DELLA COMBINAZIONE LINEARE DI AUTOSTATI DELLA MATRICE CHE MEGLIO APPROSSIMA omega_GW
+
+num_autost= 0
+
+# itero la ricerca di tali coefficienti aumentando ogni volta il numero di autostai considerati. La ricerca termina quando la differenza tra omega_GW e tale combinazione (mem_err) risulta più grande dell'iterazione precedente.
+
+mem_err= 10**(10)
+
+
+while(1):
+
+    num_autost+= 1
+
+    rap= int( K/num_autost )
+    res= K%num_autost
+
+
+    if(res==0):
+        ini= rap-1
+
+    else:
+        ini= res-1+rap
+
+
+    omega_per_appros= omega_GW[ini::rap]
+
+
+    # Creazione della matrice
+
+    mat= np.zeros((num_autost, num_autost))
+
+    for j in range(0, num_autost):
+
+        autostato= autovett[j][1]
+        autostato= autostato[ini::rap]
+
+        for i in range(0, num_autost):
+
+            mat[i][j]= autostato[i]
+
+
+    # Indivuduazione coefficienti e calcolo errore
+
+    coeff= np.linalg.solve(mat, omega_per_appros)
+
+
+    omega_appros= np.zeros( len(autovett[0][1]) )
+
+    for i in range(0, num_autost):
+
+        omega_appros= coeff[i]*autovett[i][1]
+
+
+    err= 0
+
+    for i in range(0,K):
+
+        err+= np.abs(omega_appros[i]-omega_GW[i])
+
+    if ( err> mem_err):
+        break
+
+    mem_err= err
+
+
+
+print("L'approssimazione migliore si ottiene con {0} autovettori".format(num_autost))
+
+
+
+
+# CONFRONTO
+
+dif_max= 0
+i_max= 0
+
+for i in range(0, len(omega_GW)):
+
+    diff= abs( (omega_appros[i] - omega_GW[i])/omega_GW[i]  )
+
+    if( diff> dif_max ):
+        dif_max= diff
+        i_max= i
+
+
+print("Il valore massimo della differenza relativa ( modulo di omega ottenuto con convoluzione meno omega \"esatto\" diviso quest'ultimo) è pari a {:.2e} e corrisponede alla frequenza {:.2e}".format(dif_max, freq[i_max]))
+
+
+
+
+
+
+# GRAFICO PER IL CONFRONTO DELL'APPROSSIMAZIONE MIGLIORE CON omega_GW
+
+fig, ax = plt.subplots(2)
+
+ax[0].plot(freq, omega_GW, linestyle=(0, (1, 1)), color="blue", label="Soluzione Esatta")
+ax[0].plot(freq, omega_appros, linestyle="--", color="red", label="Approssimazione Migliore")
+
+
+ax[0].set_title("$\\Omega_{GW}$ in funzione della frequenza", fontsize=14)
+ax[0].set_xlabel("f [Hz]", fontsize=10)
+ax[0].set_ylabel("$\\Omega_{GW}$", fontsize=10)
+ax[0].set_xlim(min(freq), max(freq))
+ax[0].set_xscale("log")
+ax[0].set_yscale("log")
+
+ax[0].legend()
+
+
+scarto= (omega_appros-omega_GW)/omega_GW
+
+ax[1].plot(freq, abs(scarto), linestyle="-", color="blue")
+
+ax[1].plot( freq[i_max], dif_max, marker=".", color="blue")
+ax[1].text( freq[i_max], dif_max, "{:.2e}".format(dif_max), horizontalalignment="right")
+
+ax[1].set_title("Modulo della Differenza Relativa tra le $\\Omega_{GW}$ ", fontsize=14)
+ax[1].set_xlabel("f [Hz]", fontsize=10)
+ax[1].set_ylabel("$|\\Delta(\\Omega_{GW})/\\Omega_{GW}|$", fontsize=10)
+ax[1].set_xlim(min(freq), max(freq))
+#ax[1].set_ylim(10**(-13), 10**(-5))
+ax[1].set_xscale("log")
+ax[1].set_yscale("log")
+
+
+
+
+plt.tight_layout()
+plt.show()
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

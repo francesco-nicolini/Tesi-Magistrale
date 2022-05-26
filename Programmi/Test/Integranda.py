@@ -31,7 +31,7 @@ freq_max=10**(1)
 
 
 # camp è il numero di frequenze (+1) tra un campionamento e l'altro quando si realizza il grafico
-camp= 2
+camp= 30
 
 
 # se la variabile omega è pari a True viene realizzato il grafico della funzione integranda riscalata per Omega_GW (letto da file, quindi applicabile solo se option="read"), se invece assume un qualsiasi altro valore viene realizzato il grafico dell'integranda non riscalata
@@ -300,7 +300,7 @@ else:
 fig= plt.figure()
 
 plt.xlabel("M [M_sole]", fontsize=12)
-plt.xlim(min(masse)-1, max(masse))
+plt.xlim(min(masse), max(masse))
 
 for i in range(0, len(freq_graf)):
 
