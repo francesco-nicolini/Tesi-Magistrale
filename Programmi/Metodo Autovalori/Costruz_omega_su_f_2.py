@@ -7,7 +7,7 @@ from scipy.integrate import dblquad
 
 
 # num contiene il numero di frequenze usate per realizzare il grafico
-num=500
+num=50
 
 # freq_min e fre_max contengono il minimo e il massimo valore dell'intervallo della frequenza usato per visualizzare tutta la funzione omega (l'intervallo delle frequenze è creato in scala logaritmica
 freq_tutta_min=10**(-8)
@@ -123,9 +123,15 @@ def omega(nu, mu, sigma, m_min, m_max):
 
     return cost*nu**2*integrale
 
+
+
+
+
 # CREAZIONE DEI DUE ARREY DI OEMGA
 
-nu_tutta_minore= np.logspace(np.log10(freq_tutta_min), np.log10(freq_min), base=10, num= int(num/10))
+riscalamento= 3
+
+nu_tutta_minore= np.logspace(np.log10(freq_tutta_min), np.log10(freq_min), base=10, num= int(num/riscalamento))
 
 omega_GW_tutta_minore= np.zeros(len(nu_tutta_minore))
 
@@ -135,13 +141,27 @@ for i in range(0, len(nu_tutta_minore)):
 
 
 
-nu_tutta_maggiore= np.logspace(np.log10(freq_max), np.log10(freq_tutta_max), base=10, num= int(num/10))
+nu_tutta_maggiore= np.logspace(np.log10(freq_max), np.log10(freq_tutta_max), base=10, num= int(num/riscalamento))
 
 omega_GW_tutta_maggiore= np.zeros(len(nu_tutta_maggiore))
 
 for i in range(0, len(nu_tutta_maggiore)):
 
     omega_GW_tutta_maggiore[i]= omega(nu_tutta_maggiore[i], mu=mu, sigma=sigma, m_min=m_min, m_max=m_max)
+
+
+
+nu= np.logspace(np.log10(freq_min), np.log10(freq_max), base=10, num=num)
+
+omega_GW= np.zeros(len(nu))
+
+
+print("La frequenza varia all'interno di tale range: [ {:.e2} - {:.2e} ]".format(nu[0], nu[-1]))
+
+
+for i in range(0, len(nu)):
+
+    omega_GW[i]= omega(nu[i], mu=mu, sigma=sigma, m_min=m_min, m_max=m_max)
 
 '''
 # CREAZIONE DEI DUE ARREY DI OEMGA
@@ -154,16 +174,6 @@ for i in range(0, len(nu_tutta)):
 
     omega_GW_tutta[i]= omega(nu_tutta[i], mu=mu, sigma=sigma, m_min=m_min, m_max=m_max)
 
-
-
-
-nu= np.logspace(np.log10(freq_min), np.log10(freq_max), base=10, num=num)
-
-omega_GW= np.zeros(len(nu))
-
-for i in range(0, len(nu)):
-
-    omega_GW[i]= omega(nu[i], mu=mu, sigma=sigma, m_min=m_min, m_max=m_max)
 
 
 
@@ -207,7 +217,7 @@ ax.plot(nu, omega_GW, linestyle="-", color=color_wind, label="Finestra di Intere
 
 
 
-inf_omega= min(omega_GW_tutta)
+inf_omega= min(omega_GW_tutta_minore)
 
 ax.plot([nu[0], nu[0]], [inf_omega, omega_GW[0]], linestyle="--", marker="", color=color_wind, alpha=1)
 plt.text( nu[0]/1.2, inf_omega*10, "f= {:.2} Hz".format(freq_min), ha="right", va="top", color=color_wind, fontsize=9)
@@ -227,7 +237,6 @@ plt.xlim(freq_tutta_min, freq_tutta_max)
 plt.ylim(inf_omega, 10**(-15))
 
 plt.legend()
-
 
 
 
