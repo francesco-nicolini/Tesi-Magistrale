@@ -250,6 +250,11 @@ num_autost= 0
 
 mem_err= 10**(10)
 
+# in omega_mom si scrive l'approssimazione all'iterazione attuale
+omega_mom= np.zeros( len(autovett[0][1]) )
+
+# in omega_appros si scrive l'approssimazione all'iterazione precedente
+omega_appros= np.zeros( len(autovett[0][1]) )
 
 while(1):
 
@@ -288,23 +293,27 @@ while(1):
     coeff= np.linalg.solve(mat, omega_per_appros)
 
 
-    omega_appros= np.zeros( len(autovett[0][1]) )
+
 
     for i in range(0, num_autost):
 
-        omega_appros= coeff[i]*autovett[i][1]
+        omega_mom= coeff[i]*autovett[i][1]
 
 
     err= 0
 
     for i in range(0,K):
 
-        err+= np.abs(omega_appros[i]-omega_GW[i])
+        err+= np.abs(omega_mom[i]-omega_GW[i])
 
     if ( err> mem_err):
         break
 
     mem_err= err
+
+    for i in range(0, len(omega_appros)):
+
+        omega_appros[i]= omega_mom[i]
 
 
 

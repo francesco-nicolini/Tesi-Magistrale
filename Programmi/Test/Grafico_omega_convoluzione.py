@@ -269,7 +269,7 @@ masse= np.linspace(m_min, m_max, K)
 
 
 
-
+matrix= fun_mat(freq, masse)
 
 omega_conv= np.dot(matrix, conv)
 
