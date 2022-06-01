@@ -7,16 +7,19 @@ from scipy.integrate import dblquad
 
 
 # num contiene il numero di frequenze usate per realizzare il grafico
-num=50
+num=500
 
 # freq_min e fre_max contengono il minimo e il massimo valore dell'intervallo della frequenza usato per visualizzare tutta la funzione omega (l'intervallo delle frequenze è creato in scala logaritmica
 freq_tutta_min=10**(-8)
 freq_tutta_max=10**(1)
 
 
-# freq_min e fre_max contengono il minimo e il massimo valore dell'intervallo della frequenza usato per la costruzione della funzione omega nell'intervallo di interesse (l'intervallo delle frequenze è creato in scala logaritmica
-freq_min= 0.18
-freq_max= 1.8
+# alpha_min e alpha_max contengono il valore minimo e il valore massimo di alpha (definito come l'inverso del quadrato della frequenza)
+alpha_min= 10**(0)
+alpha_max= 10**(2)
+
+
+
 
 
 
@@ -28,9 +31,8 @@ name_omega= "omega_GW.txt"
 name_f_m= "f_m.txt"
 
 # valore minimo e valore massimo considerati per la massa
-
-m_min= 1
-m_max= 10**2
+m_min= alpha_min
+m_max= alpha_max
 
 # valori dei parametri della funzione f_m ( ossia f(m) )
 
@@ -129,9 +131,26 @@ def omega(nu, mu, sigma, m_min, m_max):
 
 # CREAZIONE DEI DUE ARREY DI OEMGA
 
+# creazione estremi delle frequenze considerate nella finestra
+
+# freq_min e fre_max contengono il minimo e il massimo valore dell'intervallo della frequenza usato per la costruzione della funzione omega nell'intervallo di interesse (l'intervallo delle frequenze è creato in scala logaritmica
+
+freq_min= 1/(np.sqrt(alpha_max))
+freq_max= 1/(np.sqrt(alpha_min))
+
+alpha= np.linspace(alpha_min, alpha_max, endpoint=False, num=num)
+
+nu= 1/np.sqrt(alpha)
+
+nu= nu[::-1]
+
+print("nu= ",nu)
+print("\nalpha= ", alpha)
+
+
 riscalamento= 3
 
-nu_tutta_minore= np.logspace(np.log10(freq_tutta_min), np.log10(freq_min), base=10, num= int(num/riscalamento))
+nu_tutta_minore= np.logspace(np.log10(freq_tutta_min), np.log10(nu[0]), base=10, num= int(num/riscalamento))
 
 omega_GW_tutta_minore= np.zeros(len(nu_tutta_minore))
 
@@ -141,7 +160,7 @@ for i in range(0, len(nu_tutta_minore)):
 
 
 
-nu_tutta_maggiore= np.logspace(np.log10(freq_max), np.log10(freq_tutta_max), base=10, num= int(num/riscalamento))
+nu_tutta_maggiore= np.logspace(np.log10(nu[-1]), np.log10(freq_tutta_max), base=10, num= int(num/riscalamento))
 
 omega_GW_tutta_maggiore= np.zeros(len(nu_tutta_maggiore))
 
@@ -151,12 +170,12 @@ for i in range(0, len(nu_tutta_maggiore)):
 
 
 
-nu= np.logspace(np.log10(freq_min), np.log10(freq_max), base=10, num=num)
+
 
 omega_GW= np.zeros(len(nu))
 
 
-print("La frequenza varia all'interno di tale range: [ {:.e2} - {:.2e} ]".format(nu[0], nu[-1]))
+print("La frequenza varia all'interno di tale range: [ {:.2} - {:.2} ]".format(nu[0], nu[-1]))
 
 
 for i in range(0, len(nu)):

@@ -1,4 +1,5 @@
 import numpy as np
+from numpy.linalg import eig
 import matplotlib.pyplot as plt
 import math
 import keyboard
@@ -11,8 +12,11 @@ import keyboard
 # K contiene il numero di valori della funzione che si vogliono calcolare (ossia il numero delle variabili)
 K=50
 
+# num_autoval contiene il numero di autostati considerati per approssimare la funzione omega/f**2
+num_autoval= 11
+
 # Estremo superiore e estremo inferiore delle masse considerate nell'integrale e scarto tra due masse consecutive
-m_min=1
+m_min=10**(0)
 m_max=10**2
 
 
@@ -177,12 +181,12 @@ plt.xlabel("f [Hz]")
 plt.ylabel("$\\Omega_{GW}$")
 plt.yscale("log")
 plt.xscale("log")
-plt.xlim(freq_tutta_min, freq_tutta_max)
+plt.xlim(min(freq_tutta_minore), max(freq_tutta_maggiore))
 plt.ylim(inf_omega, 10**(-15))
 
 plt.legend()
 
-plt.show()
+
 
 
 # Ricampionamento del vettore freq e omega in modo tale che abbia le giuste dimensioni (ossia K)
@@ -218,7 +222,7 @@ print("Dopo il ricampionamento il file contenente omega_GW ha dimensione {0}, me
 
 # Lista dei valori della massa totale utilizzati per effettuare la discretizzazione dell'integrale (sono in masse solari)
 
-masse= np.logspace( np.log10(m_min), np.log10(m_max), K)
+masse= np.linspace( m_min, m_max, endpoint=False, num=K)
 
 alpha= 1/freq**2
 
@@ -235,6 +239,9 @@ omega_risc= omega_GW/freq**2
 omega_risc= omega_risc[::-1]
 
 
+print("alpha:", alpha)
+
+print("\nmasse:", masse)
 
 
 
@@ -255,7 +262,13 @@ def integ(M, alpha):
 
     z= (1 - y**2 + 4*y**4 + 1.5*(x_0*y**6)/(xi))/( np.exp(2*x_0*xi)*(1 + y**2)**2)
 
-    return cost*z
+    return z
+
+
+
+
+
+
 
 
 # CREAZIONE DELLA MATRICE E TEST DI SIMMETRIA
@@ -281,9 +294,16 @@ print("\n\nMatrice di cui sono determinate tutte le componenti")
 matrix= np.zeros( (K,K) )
 
 
+m= masse[0]
+a= alpha[0]
+
+#print( integ(m, a))
+
+
 for i in range(0,K):
 
     for j in range(0,K):
+
 
         matrix[i][j]= integ( masse[i], alpha[j])
 
@@ -356,10 +376,242 @@ mat_fin= np.dot( D, matrix)
 mat_fin= np.dot( mat_fin, D)
 
 
-omega_fin= np.dot( D, omega_risc)
+omega_fin= np.dot( D, omega_risc)/cost
 
 
 # N.B. l'arrai che si trova non è F ma D*F
+
+
+
+
+
+# DETERMINAZIONE DEGLI AUTOVALORI E DEGLI AUTOVETTORI
+
+lamb, v= eig(mat_fin)
+
+
+
+# creazione di una matrice 2*K in cui ogni riga contiene un'autovalore e il suo corrispondente autovettore. Tale matrice è realizzata così da avere gli autovettori legati ai loro corrispondenti autovettori e quindi non avere problemi quando poi questi vengono ordinati in senso decrescente
+
+autovett= []
+
+for i in range(0, len(lamb)):
+
+    rig=[]
+    autovett.append(rig)
+
+
+
+for i in range(0, len(lamb)):
+
+    autovett[i].append(lamb[i].real)
+    autovett[i].append(v[i].real)
+
+
+
+autovett= np.array(autovett, dtype=object)
+autovett= autovett[(-abs(autovett))[:,0].argsort()]
+
+for i in range(0, len(lamb)):
+
+    autovett[i][1]= autovett[i][1]/np.sqrt((np.dot(autovett[i][1], autovett[i][1])))
+
+
+print("\n\n\nLista degli autovalori individuati ordinati in senso decrescente del loro modulo:\n")
+
+
+for i in range(0, len(lamb)):
+
+    print(autovett[i][0])
+
+
+
+
+
+
+# RICERCA DEI COEFFICIENTI DELLA COMBINAZIONE LINEARE DI AUTOSTATI DELLA MATRICE CHE MEGLIO APPROSSIMA OMEGA_GW E REALIZZAZIONE DEL GRAFICO DELLA FUNZIONE STIMATA
+
+
+
+
+coeffic= np.zeros( num_autoval)
+
+for i in range(0, num_autoval):
+
+    coeffic[i]= np.dot(autovett[i][1], omega_fin)/np.dot(autovett[i][1], autovett[i][1])
+
+
+
+omega_stima= np.zeros(len(omega_fin))
+
+for i in range(0, num_autoval):
+
+    omega_stima+= coeffic[i]*autovett[i][1]
+
+
+
+fig, ax = plt.subplots(2)
+
+ax[0].plot(alpha, omega_fin, linestyle=(0, (1, 1)), color="blue", label="Soluzione Esatta")
+ax[0].plot(alpha, omega_stima, linestyle="--", color="red", label="Approssimazione trovata\ncon {0} autostati".format(num_autoval))
+
+
+ax[0].set_title("$\\Omega_{GW}$ in funzione della frequenza", fontsize=14)
+ax[0].set_xlabel("$\\alpha$ [1/Hz**2]", fontsize=10)
+ax[0].set_ylabel("$\\Omega_{GW}$", fontsize=10)
+ax[0].set_xlim(min(alpha), max(alpha))
+#ax[0].set_ylim(10**(-100), 10**(-8))
+ax[0].set_xscale("log")
+ax[0].set_yscale("log")
+
+ax[0].legend()
+
+
+scarto= (omega_fin-omega_stima)/omega_fin
+
+ax[1].plot(alpha, abs(scarto), linestyle="-", color="blue")
+
+'''
+ax[1].plot( freq[i_max], dif_max, marker=".", color="blue")
+ax[1].text( freq[i_max], dif_max, "{:.2e}".format(dif_max), horizontalalignment="right")
+'''
+
+ax[1].set_title("Modulo della Differenza Relativa tra le $\\Omega_{GW}$ ", fontsize=14)
+ax[1].set_xlabel("alpha [1/Hz**2]", fontsize=10)
+ax[1].set_ylabel("$|\\Delta(\\Omega_{GW})/\\Omega_{GW}|$", fontsize=10)
+ax[1].set_xlim(min(alpha), max(alpha))
+#ax[1].set_ylim(10**(-13), 10**(-5))
+ax[1].set_xscale("log")
+ax[1].set_yscale("log")
+
+
+
+
+plt.tight_layout()
+
+
+
+
+
+
+
+
+
+'''
+print("\n\nComponenti di omega stimata:\n")
+
+for i in range(0, len(omega_stima)):
+    print(omega_stima[i])
+'''
+
+print("\n\nCoefficienti:\n")
+
+for i in range(0, len(coeffic)):
+    print(coeffic[i])
+
+'''
+print("\n\nautostati:\n")
+
+for i in range(0, len(coeffic)):
+
+    print("\nAutovettore numero {0}:\n".format(i))
+
+    for j in range(0, len(autovett[i][1])):
+
+        print(autovett[i][1][j])
+'''
+
+
+
+
+
+# TEST SUGLI AUTOVETTORI INDIVIDUATI
+
+
+
+massimo=0
+
+for i in range(0, len(autovett)):
+
+    coeff= np.dot(autovett[i][1], autovett[i][1])
+
+    if ( massimo<coeff ):
+        massimo=coeff
+        i_massimo= i
+
+print("\n\nIl modulo massimo è {:.2} e si ha per l'autostato {:}".format(massimo, i_massimo))
+
+
+
+massimo= 0
+
+for i in range(0, len(autovett)):
+
+    for j in range(i+1, len(autovett)):
+
+        coeff_ort= np.dot(autovett[i][1], autovett[j][1])
+
+        if ( massimo<abs(coeff_ort) ):
+            massimo= coeff_ort
+            i_massimo= i
+            j_massimo= j
+
+
+print("\n\n\nMassimo del valore assoluto del prodotto scalare di un'autovettore per un diverso autovettore: {:.2}\nTale risultato si ottiene per la coppia ({:},{:})".format(massimo, i_massimo, j_massimo ) )
+
+
+
+soglia= 10**(-2)
+sopra_sogl=[]
+i_sup_sogl=[]
+j_sup_sogl=[]
+
+
+for i in range(0, len(autovett)):
+
+    for j in range(i+1, len(autovett)):
+
+        coeff_ort= np.dot(autovett[i][1], autovett[j][1])
+
+        if ( abs(coeff_ort)>soglia ):
+
+            sopra_sogl.append(coeff_ort)
+            i_sup_sogl.append(i)
+            j_sup_sogl.append(j)
+
+'''
+print("\n\n\nLista dei valori assoluti di prodotti scalari di autovettori diversi tra loro che sono superiori alla soglia di {:.2} e corrispettive coppie:\n".format(soglia))
+
+
+for i in range(0, len(sopra_sogl)):
+
+    print("{:.2} ({:},{:})".format(sopra_sogl[i], i_sup_sogl[i], j_sup_sogl[i]))
+'''
+
+
+
+
+# CALCOLO F(M)
+
+F_M= np.zeros(K)
+
+for i in range(0, num_autoval):
+
+    F_M+= (coeffic[i]/autovett[i][0])*autovett[i][1]
+
+
+fig, ax= plt.subplots()
+
+plt.plot(masse, F_M)
+plt.xlabel("M [M_sun]")
+plt.ylabel("F(M)")
+
+
+
+
+
+plt.show()
+
 
 
 
