@@ -7,7 +7,7 @@ from scipy.integrate import dblquad
 
 
 # num contiene il numero di frequenze usate per realizzare il grafico
-num=500
+num=50
 
 # freq_min e fre_max contengono il minimo e il massimo valore dell'intervallo della frequenza usato per visualizzare tutta la funzione omega (l'intervallo delle frequenze è creato in scala logaritmica
 freq_tutta_min=10**(-8)

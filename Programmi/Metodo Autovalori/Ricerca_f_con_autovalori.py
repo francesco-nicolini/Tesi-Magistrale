@@ -1,5 +1,5 @@
 import numpy as np
-from numpy.linalg import eig
+from numpy.linalg import eigh
 import matplotlib.pyplot as plt
 import math
 import keyboard
@@ -13,7 +13,7 @@ import keyboard
 K=50
 
 # num_autoval contiene il numero di autostati considerati per approssimare la funzione omega/f**2
-num_autoval= 11
+num_autoval= 50
 
 # Estremo superiore e estremo inferiore delle masse considerate nell'integrale e scarto tra due masse consecutive
 m_min=10**(0)
@@ -45,8 +45,8 @@ freq_min= 0.18
 freq_max= 1.8
 
 
-
-
+# Il programma indica il numero e in caso di necessita la lista dei moduli di un prodotto scalare di un autovettore per un autovettore con un valore superiore a quello contenuto nrlla variabile soglia
+soglia= 10**(-10)
 
 
 
@@ -218,7 +218,7 @@ print("Dopo il ricampionamento il file contenente omega_GW ha dimensione {0}, me
 
 
 
-# CREAZIONE DELLE LISTE CONTENENTI LE MASSE, I VALORI DI ALPHA OMEGA DIVISO PER LA FREQUENZA LA QUADRATO
+# CREAZIONE DELLE LISTE CONTENENTI LE MASSE, I VALORI DI ALPHA E OMEGA DIVISO PER LA FREQUENZA LA QUADRATO
 
 # Lista dei valori della massa totale utilizzati per effettuare la discretizzazione dell'integrale (sono in masse solari)
 
@@ -387,7 +387,7 @@ omega_fin= np.dot( D, omega_risc)/cost
 
 # DETERMINAZIONE DEGLI AUTOVALORI E DEGLI AUTOVETTORI
 
-lamb, v= eig(mat_fin)
+lamb, v= eigh(mat_fin)
 
 
 
@@ -477,7 +477,7 @@ ax[1].text( freq[i_max], dif_max, "{:.2e}".format(dif_max), horizontalalignment=
 '''
 
 ax[1].set_title("Modulo della Differenza Relativa tra le $\\Omega_{GW}$ ", fontsize=14)
-ax[1].set_xlabel("alpha [1/Hz**2]", fontsize=10)
+ax[1].set_xlabel("$\\alpha$ [1/Hz**2]", fontsize=10)
 ax[1].set_ylabel("$|\\Delta(\\Omega_{GW})/\\Omega_{GW}|$", fontsize=10)
 ax[1].set_xlim(min(alpha), max(alpha))
 #ax[1].set_ylim(10**(-13), 10**(-5))
@@ -561,7 +561,7 @@ print("\n\n\nMassimo del valore assoluto del prodotto scalare di un'autovettore 
 
 
 
-soglia= 10**(-2)
+
 sopra_sogl=[]
 i_sup_sogl=[]
 j_sup_sogl=[]
@@ -578,6 +578,9 @@ for i in range(0, len(autovett)):
             sopra_sogl.append(coeff_ort)
             i_sup_sogl.append(i)
             j_sup_sogl.append(j)
+
+
+print("\n\n\nCi sono {:} valori assoluti di prodotti scalari di autovettori diversi tra loro che sono superiori alla soglia di {:.2} :\n".format( len(sopra_sogl), soglia))
 
 '''
 print("\n\n\nLista dei valori assoluti di prodotti scalari di autovettori diversi tra loro che sono superiori alla soglia di {:.2} e corrispettive coppie:\n".format(soglia))
