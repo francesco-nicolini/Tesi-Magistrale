@@ -361,11 +361,15 @@ fig, ax= plt.subplots()
 
 ax.set_title("Soluzione Individuata Considerando {0} Valori Singolari".format(num_sing))
 
+ax.plot([masse[0],masse[-1]], [0,0], linestyle="-", color="black", marker="", linewidth=0.75, alpha=1)
+
 ax.plot(masse, F_M, linestyle="-", color="blue", marker="", label="Soluzione Ottenuta")
-ax.plot(val_conv, conv, linestyle="-", color="red", marker="", label="Soluzione Esatta $\\mu$= {0}, $\\sigma$= {1}".format( mu, sigma))
+ax.plot(val_conv, conv, linestyle="-", color="red", marker="", label="Soluzione Esatta: $\\mu$= {0}, $\\sigma$= {1}".format( mu, sigma))
+
 
 ax.set_xlabel("M [M_sun]")
 ax.set_ylabel("F(M)")
+ax.set_xlim(masse[0], masse[-1])
 
 ax.legend()
 
