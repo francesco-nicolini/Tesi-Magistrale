@@ -14,9 +14,9 @@ freq_min=10**(-8)
 freq_max=10**(1)
 
 # percorso del file in cui stampare i risultati
-path="C:\\Users\\39366\\Dropbox\\PC\\Documents\\GitHub\\Tesi-Magistrale\\Programmi\\file_txt"
-name_omega= "omega_GW.txt"
-name_f_m= "f_m.txt"
+path="C:\\Users\\39366\\Dropbox\\PC\\Documents\\GitHub\\Tesi-Magistrale\\Programmi\\Metodo SVD\\file_txt"
+name_omega= "omega_GW_" + str(num) + ".txt"
+name_f_m= "f_m._" + str(num) + "txt"
 
 # valore minimo e valore massimo considerati per la massa
 

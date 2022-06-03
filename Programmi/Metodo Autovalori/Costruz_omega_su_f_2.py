@@ -7,7 +7,7 @@ from scipy.integrate import dblquad
 
 
 # num contiene il numero di frequenze usate per realizzare il grafico
-num=50
+num= 50
 
 # freq_min e fre_max contengono il minimo e il massimo valore dell'intervallo della frequenza usato per visualizzare tutta la funzione omega (l'intervallo delle frequenze è creato in scala logaritmica
 freq_tutta_min=10**(-8)
@@ -19,16 +19,12 @@ alpha_min= 10**(0)
 alpha_max= 10**(2)
 
 
-
-
-
-
 # percorso del file in cui stampare i risultati
 path="C:\\Users\\39366\\Dropbox\\PC\\Documents\\GitHub\\Tesi-Magistrale\\Programmi\\Metodo Autovalori\\file_txt"
-name_omega_tutta_minore= "omega_GW_tutta_minore.txt"
-name_omega_tutta_maggiore= "omega_GW_tutta_maggiore.txt"
-name_omega= "omega_GW.txt"
-name_f_m= "f_m.txt"
+name_omega_tutta_minore= "omega_GW_tutta_minore_" + str(num) + ".txt"
+name_omega_tutta_maggiore= "omega_GW_tutta_maggiore_" + str(num) + ".txt"
+name_omega= "omega_GW_" + str(num) + ".txt"
+name_f_m= "f_m_" + str(num) + ".txt"
 
 # valore minimo e valore massimo considerati per la massa
 m_min= alpha_min
@@ -38,6 +34,12 @@ m_max= alpha_max
 
 mu=10
 sigma=1
+
+
+
+
+
+
 
 
 
@@ -144,9 +146,10 @@ nu= 1/np.sqrt(alpha)
 
 nu= nu[::-1]
 
+'''
 print("nu= ",nu)
 print("\nalpha= ", alpha)
-
+'''
 
 riscalamento= 3
 

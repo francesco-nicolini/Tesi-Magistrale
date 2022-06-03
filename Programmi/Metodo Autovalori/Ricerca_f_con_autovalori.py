@@ -10,10 +10,10 @@ import keyboard
 
 
 # K contiene il numero di valori della funzione che si vogliono calcolare (ossia il numero delle variabili)
-K=50
+K= 9
 
 # num_autoval contiene il numero di autostati considerati per approssimare la funzione omega/f**2
-num_autoval= 50
+num_autoval= 5
 
 # Estremo superiore e estremo inferiore delle masse considerate nell'integrale e scarto tra due masse consecutive
 m_min=10**(0)
@@ -26,9 +26,9 @@ option="read"
 # Path dei file se option è uguale a "read"
 path_omega="C:\\Users\\39366\\Dropbox\\PC\\Documents\\GitHub\\Tesi-Magistrale\\Programmi\\Metodo Autovalori\\file_txt"
 
-name_omega_tutta_minore= "omega_GW_tutta_minore.txt"
-name_omega_tutta_maggiore= "omega_GW_tutta_maggiore.txt"
-name_omega= "omega_GW.txt"
+name_omega_tutta_minore= "omega_GW_tutta_minore_" + str(K) + ".txt"
+name_omega_tutta_maggiore= "omega_GW_tutta_maggiore_" + str(K) + ".txt"
+name_omega= "omega_GW_" + str(K) + ".txt"
 
 
 # Se option è pari a "read" ponendo disegna uguale a True verra realizzato il grafico della soluzione esatta nello stesso piano in cui vengono rappresentate le soluzioni trovate minimizzando
