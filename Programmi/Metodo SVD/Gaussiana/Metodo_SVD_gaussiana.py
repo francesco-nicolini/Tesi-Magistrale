@@ -45,6 +45,26 @@ freq_max=10**(1)
 
 
 
+# Estremi della finestra in massa che si considera una volta ottenuta la funzione F(M) (i valori fuori si escludono poiche sono caratterizzati dalla presenza di artefatti)
+mask_min= 5
+mask_max= 15
+
+
+
+# Numero di zeri aggiunti a destra e a sinistra dell'array contenente f(M) dopo che è stato selezionato nella sola finestra di cui si è parlato sopra
+num_zeri= 100
+
+
+
+# Se l'opzione media_mobile è pari a True, la funzione F(M) viene smussata tramite il metodo della media mobile
+media_mobile= True
+
+
+# Se l'opzione media_mobile è posta pari a True, allora è necessario indicare lung_sottoin, ossia la lunghezza dei sottointervalli di cui si calcola la media
+lung_sottoin= 10
+
+
+
 
 
 
@@ -355,12 +375,6 @@ for i in range(0, len(val_conv)):
 
 # SELEZIONE FINESTRA IN CUI LA SOLUZIONE TROVATA COINCIDE CON LA SOLUZIONE CORRETTA E AGGIUNTA DI ZERI
 
-mask_min= 5
-mask_max= 15
-
-#numero di zeri aggiunti a destra e a sinistra
-num_zeri= 100
-
 
 mask= ( masse>mask_min ) & ( masse<mask_max )
 
@@ -391,6 +405,43 @@ F_M= np.concatenate((F_M, array_zeri))
 
 
 
+# SMUSSAMENTO TRAMITE LA TECNICA DELLA MEDIA DINAMICA
+
+if (media_mobile==True):
+
+    lung_sottoin
+
+    F_M_medie= []
+    masse_medie= []
+
+    for i in range(0, int( len(F_M)/lung_sottoin ) ):
+
+        sum= 0
+
+        for j in range( 0, lung_sottoin):
+
+            sum+= F_M[lung_sottoin*i + j]
+
+        media= sum/lung_sottoin
+
+        F_M_medie[i]= media
+        masse_medie[i]= masse[lung_sottoin*i + int(j/2)]
+
+
+    masse= masse_medie
+    F_M= F_M_medie
+
+
+
+
+
+
+
+
+
+
+
+
 # GRAFICO DELLA SOLUZIONE INDIVIDUATA E CONFRONTO CON SOLUZIONE ESATTA
 
 fig, ax= plt.subplots()
@@ -408,13 +459,6 @@ ax.set_ylabel("F(M)")
 ax.set_xlim(max(masse[0], val_conv[0]), min(masse[-1], val_conv[-1]))
 
 ax.legend()
-
-
-
-
-
-
-
 plt.tight_layout()
 
 
@@ -508,9 +552,18 @@ plt.subplot(2,1,1)
 
 plt.plot(masse_f_m, f_m, linestyle="-", color="blue", label="Soluzione Individuata")
 
+
 if ( disegna==True ):
 
-    plt.plot(masse_graf, f_esatta, linestyle="-", color="orange", label="Soluzione Esatta")
+    def f_m_funzione(m, mu, sigma):
+
+        return (1/np.sqrt(2*math.pi*sigma**2))*np.exp(-(m-mu)**2/(2*sigma**2))
+
+
+    mu= 5
+    sigma= 1
+
+    plt.plot(masse_f_m, f_m_funzione(masse_f_m, mu, sigma), linestyle="-", color="orange", label="Soluzione Esatta")
 
 
 
