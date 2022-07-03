@@ -38,11 +38,36 @@ disegna=True
 file_name_f_m="C:\\Users\\39366\\Dropbox\\PC\\Documents\\GitHub\\Tesi-Magistrale\\Programmi\\Metodo SVD\\file_txt\\f_m_" + str(num) + ".txt"
 
 
-
 # Estremo superiore e estremo inferiore delle frequenze considerate (da selezionare solo se option è diverso da "read")
 freq_min=10**(-8)
 freq_max=10**(1)
 
+
+
+# Estremi della finestra in massa che si considera una volta ottenuta la funzione F(M) (i valori fuori si escludono poiche sono caratterizzati dalla presenza di artefatti)
+mask_min= 15.15
+mask_max= 25.15
+
+
+
+# Numero di zeri aggiunti a destra e a sinistra dell'array contenente f(M) dopo che è stato selezionato nella sola finestra di cui si è parlato sopra
+num_zeri= 100
+
+
+
+# Se opzione_smooth è pari a media_mobile, la funzione F(M) viene smussata tramite il metodo della media mobile. Se invece è pari a S_V, allora lo smussamento avviene mediante un filtro di Savitzky Golay
+opzione_smooth= media_mobile
+
+
+
+# Se opzione_smooth è pari a media_mobile, allora è necessario indicare lung_sottoin, ossia la lunghezza dei sottointervalli di cui si calcola la media
+lung_sottoin= 10
+
+
+
+# Se opzione_smooth è pari a S_V, allora è necessario indicare wind_size, ossia la dimensione della finestra per la determinazione del polinomio locale, e poly_order, ossia l'ordine del polinomio
+wind_size= 10
+poly_order= 3
 
 
 
@@ -355,12 +380,6 @@ for i in range(0, len(val_conv)):
 
 # SELEZIONE FINESTRA IN CUI LA SOLUZIONE TROVATA COINCIDE CON LA SOLUZIONE CORRETTA E AGGIUNTA DI ZERI
 
-mask_min= 15.15
-mask_max= 25.15
-
-#numero di zeri aggiunti a destra e a sinistra
-num_zeri= 100
-
 
 mask= ( masse>mask_min ) & ( masse<mask_max )
 
@@ -391,6 +410,57 @@ F_M= np.concatenate((F_M, array_zeri))
 
 
 
+# SMUSSAMENTO TRAMITE LA TECNICA DELLA MEDIA MOBILE
+
+if (opzione_smooth==media_mobile):
+
+    F_M_medie= []
+    masse_medie= []
+
+    for i in range(0, int( len(F_M)/lung_sottoin ) ):
+
+        sum= 0
+
+        for j in range( 0, lung_sottoin):
+
+            sum+= F_M[lung_sottoin*i + j]
+
+        media= sum/lung_sottoin
+
+        F_M_medie[i]= media
+        masse_medie[i]= masse[lung_sottoin*i + int(j/2)]
+
+
+    masse= masse_medie
+    F_M= F_M_medie
+
+
+
+
+
+
+
+
+
+
+
+
+
+# SMUSSAMENTO TRAMITE FILTRO DI SAVITZKY GOLAY
+
+if (opzione_smooth==S_V):
+
+    F_M= scipy.signal.savgol_filter(F_M, wind_size, poly_order)
+
+
+
+
+
+
+
+
+
+
 # GRAFICO DELLA SOLUZIONE INDIVIDUATA E CONFRONTO CON SOLUZIONE ESATTA
 
 fig, ax= plt.subplots()
@@ -405,16 +475,10 @@ ax.plot(val_conv, conv, linestyle="-", color="red", marker="", label="Soluzione 
 
 ax.set_xlabel("M [M_sun]")
 ax.set_ylabel("F(M)")
-ax.set_xlim(masse[0], masse[-1])
+ax.set_xlim(max(masse[0], val_conv[0]), min(masse[-1], val_conv[-1]))
+
 
 ax.legend()
-
-
-
-
-
-
-
 plt.tight_layout()
 
 
@@ -524,8 +588,14 @@ plt.plot(masse_f_m, f_m, linestyle="-", color="blue", label="Soluzione Individua
 
 if ( disegna==True ):
 
-    plt.plot(masse_graf, f_esatta, linestyle="-", color="orange", label="Soluzione Esatta")
+    def f_m_funzione(m, mu, sigma):
 
+        return (1/np.sqrt(2*math.pi*sigma**2))*np.exp(-(m-mu)**2/(2*sigma**2))
+
+    mu= 5
+    sigma= 1
+
+    plt.plot(masse_f_m, f_m_funzione(masse_f_m, mu, sigma), linestyle="-", color="orange", label="Soluzione Esatta")
 
 
 plt.title("FUNZIONE LOGARITMICA DI MASSA")

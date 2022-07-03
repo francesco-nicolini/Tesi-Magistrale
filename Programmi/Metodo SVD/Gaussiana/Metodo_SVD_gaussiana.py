@@ -56,12 +56,19 @@ num_zeri= 100
 
 
 
-# Se l'opzione media_mobile è pari a True, la funzione F(M) viene smussata tramite il metodo della media mobile
-media_mobile= True
+# Se opzione_smooth è pari a media_mobile, la funzione F(M) viene smussata tramite il metodo della media mobile. Se invece è pari a S_V, allora lo smussamento avviene mediante un filtro di Savitzky Golay
+opzione_smooth= media_mobile
 
 
-# Se l'opzione media_mobile è posta pari a True, allora è necessario indicare lung_sottoin, ossia la lunghezza dei sottointervalli di cui si calcola la media
+
+# Se opzione_smooth è pari a media_mobile, allora è necessario indicare lung_sottoin, ossia la lunghezza dei sottointervalli di cui si calcola la media
 lung_sottoin= 10
+
+
+
+# Se opzione_smooth è pari a S_V, allora è necessario indicare wind_size, ossia la dimensione della finestra per la determinazione del polinomio locale, e poly_order, ossia l'ordine del polinomio
+wind_size= 10
+poly_order= 3
 
 
 
@@ -405,11 +412,9 @@ F_M= np.concatenate((F_M, array_zeri))
 
 
 
-# SMUSSAMENTO TRAMITE LA TECNICA DELLA MEDIA DINAMICA
+# SMUSSAMENTO TRAMITE LA TECNICA DELLA MEDIA MOBILE
 
-if (media_mobile==True):
-
-    lung_sottoin
+if (opzione_smooth==media_mobile):
 
     F_M_medie= []
     masse_medie= []
@@ -442,6 +447,21 @@ if (media_mobile==True):
 
 
 
+# SMUSSAMENTO TRAMITE FILTRO DI SAVITZKY GOLAY
+
+if (opzione_smooth==S_V):
+
+    F_M= scipy.signal.savgol_filter(F_M, wind_size, poly_order)
+
+
+
+
+
+
+
+
+
+
 # GRAFICO DELLA SOLUZIONE INDIVIDUATA E CONFRONTO CON SOLUZIONE ESATTA
 
 fig, ax= plt.subplots()
@@ -457,6 +477,7 @@ ax.plot(val_conv, conv, linestyle="-", color="red", marker="", label="Soluzione 
 ax.set_xlabel("M [M_sun]")
 ax.set_ylabel("F(M)")
 ax.set_xlim(max(masse[0], val_conv[0]), min(masse[-1], val_conv[-1]))
+
 
 ax.legend()
 plt.tight_layout()
@@ -558,7 +579,6 @@ if ( disegna==True ):
     def f_m_funzione(m, mu, sigma):
 
         return (1/np.sqrt(2*math.pi*sigma**2))*np.exp(-(m-mu)**2/(2*sigma**2))
-
 
     mu= 5
     sigma= 1
