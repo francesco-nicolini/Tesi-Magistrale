@@ -56,12 +56,12 @@ num_zeri= 100
 
 
 
-# Se opzione_smooth è pari a media_mobile, la funzione F(M) viene smussata tramite il metodo della media mobile. Se invece è pari a S_V, allora lo smussamento avviene mediante un filtro di Savitzky Golay
+# Se opzione_smooth è pari a media_mobile, la funzione F(M) viene smussata tramite il metodo della media mobile con finestre indipendenti. Se invece è pari a media_mobile_1, si utilizza il metodo della media mobile con finestre dipendenti.  Se invece è pari a S_V, allora lo smussamento avviene mediante un filtro di Savitzky Golay
 opzione_smooth= media_mobile
 
 
 
-# Se opzione_smooth è pari a media_mobile, allora è necessario indicare lung_sottoin, ossia la lunghezza dei sottointervalli di cui si calcola la media
+# Se opzione_smooth è pari a media_mobile o a media_mobile_1, allora è necessario indicare lung_sottoin, ossia la lunghezza dei sottointervalli di cui si calcola la media
 lung_sottoin= 10
 
 
@@ -412,12 +412,13 @@ F_M= np.concatenate((F_M, array_zeri))
 
 
 
-# SMUSSAMENTO TRAMITE LA TECNICA DELLA MEDIA MOBILE
+# SMUSSAMENTO TRAMITE LA TECNICA DELLA MEDIA MOBILE (DIVIDO IN FINESTRE INDIPENDENTI, QUINDI SI RIDUCE IL NUMERO DEI PUNTI ALLA FINE)
+# divido in sottointervalli e per ognuna calcolo la media, le finestra successiva non condivide alcun punto con quella precedente, quindi la dimensione finale è pari alla dimensione iniziale diviso la lunghezza della finestra
 
 if (opzione_smooth==media_mobile):
 
-    F_M_medie= []
     masse_medie= []
+    F_M_medie= []
 
     for i in range(0, int( len(F_M)/lung_sottoin ) ):
 
@@ -437,6 +438,40 @@ if (opzione_smooth==media_mobile):
     F_M= F_M_medie
 
 
+
+
+
+
+
+
+
+# SMUSSAMENTO TRAMITE LA TECNICA DELLA MEDIA MOBILE (DIVIDO IN FINESTRE CHE CONDIVIDONO DIVERSI PUNTU)
+# creo una finestra e calcolo media, la finestra successiva si crea partendo dalla precedente facendo scorrere di un valore a destra, quindi vengono condivisi un numero di punti pari alla lunghezza della finestra meno uno. La dimensione finale è pari a alla dimensione iniziale meno la lunghezza della finestra
+
+
+
+if (opzione_smooth==media_mobile_1):
+
+    masse_medie_1= np.zeros( len(F_M) - lung_sottoin )
+    F_M_medie_1= np.zeros( len(F_M) - lung_sottoin )
+
+
+    for i in range( int(lung_sottoin/2), len(F_M) - int(lung_sottoin/2)):
+
+        sum= 0
+
+        for j in range( -int(lung_sottoin/2), int(lung_sottoin/2)):
+
+            sum+= F_M[i + j]
+
+        media= sum/lung_sottoin
+
+        F_M_medie_1[i-int(lung_sottoin/2)]= media
+        masse_medie_1[i-int(lung_sottoin/2)]= masse[i]
+
+
+    masse= masse_medie_1
+    F_M= F_M_medie_1
 
 
 
