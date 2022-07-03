@@ -7,25 +7,25 @@ from scipy.integrate import dblquad
 
 
 # num contiene il numero di frequenze usate per realizzare il grafico
-num=5000
+num=500
 
 # freq_min e fre_max contengono il massimo valore della frequenza e il minimo (l'intervallo delle frequenze è creato in scala logaritmica
 freq_min=10**(-8)
 freq_max=10**(1)
 
 # percorso del file in cui stampare i risultati
-path="C:\\Users\\39366\\Dropbox\\PC\\Documents\\GitHub\\Tesi-Magistrale\\Programmi\\Metodo SVD\\file_txt"
+path="C:\\Users\\39366\\Dropbox\\PC\\Documents\\GitHub\\Tesi-Magistrale\\Programmi\\Metodo SVD\\Gaussiana\\file_txt"
 name_omega= "omega_GW_" + str(num) + ".txt"
 name_f_m= "f_m_" + str(num) + ".txt"
 
 # valore minimo e valore massimo considerati per la massa
 
 m_min=1
-m_max=30
+m_max=10
 
 # valori dei parametri della funzione f_m (ossia f(m) )
 
-mu=10
+mu=5
 sigma=1
 
 
@@ -89,7 +89,7 @@ print( "z= ",(1 - y**2 + 4*y**4 + 1.5*(x_0*y**6)/(xi))/( np.exp(2*x_0*xi)*(1 + y
 # descrive la distribuzione in massa dei buchi neri primordiali
 def f_m(m, mu, sigma):
 
-    return (m**2/np.sqrt(2*math.pi*sigma**2))*np.exp(-(m-mu)**2/(2*sigma**2))
+    return (1/np.sqrt(2*math.pi*sigma**2))*np.exp(-(m-mu)**2/(2*sigma**2))
 
 
 # è la funzione che appare nell'integrale di omega escludendo le f(m)

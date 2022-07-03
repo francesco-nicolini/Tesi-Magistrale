@@ -13,7 +13,7 @@ import keyboard
 K=500
 
 # num_sing contiene il numero di valori singolari che si vogliono considerare per la risoluzione del problema
-num_sing= 29
+num_sing= 25
 
 # Estremo superiore e estremo inferiore delle masse considerate nell'integrale e scarto tra due masse consecutive
 m_min=1
@@ -27,7 +27,7 @@ option="read"
 # Path del file se option è uguale a "read", num è il numero di valori della frequenza considerati nel file che si vuole aprire
 num= 500
 
-file_name_omega="C:\\Users\\39366\\Dropbox\\PC\\Documents\\GitHub\\Tesi-Magistrale\\Programmi\\Metodo SVD\\file_txt\\omega_GW_" + str(num) + ".txt"
+file_name_omega="C:\\Users\\39366\\Dropbox\\PC\\Documents\\GitHub\\Tesi-Magistrale\\Programmi\\Metodo SVD\\Gaussiana\\file_txt\\omega_GW_" + str(num) + ".txt"
 
 
 # Se option è pari a "read" ponendo disegna uguale a True verra realizzato il grafico della soluzione esatta nello stesso piano in cui vengono rappresentate le soluzioni trovate minimizzando
@@ -35,7 +35,7 @@ disegna=True
 
 
 # Path del file se disegna è uguale a True
-file_name_f_m="C:\\Users\\39366\\Dropbox\\PC\\Documents\\GitHub\\Tesi-Magistrale\\Programmi\\Metodo SVD\\file_txt\\f_m_" + str(num) + ".txt"
+file_name_f_m="C:\\Users\\39366\\Dropbox\\PC\\Documents\\GitHub\\Tesi-Magistrale\\Programmi\\Metodo SVD\\Gaussiana\\file_txt\\f_m_" + str(num) + ".txt"
 
 
 
@@ -313,10 +313,10 @@ F_M= np.dot(F_M, omega_GW)
 
 def f_m(m, mu, sigma):
 
-    return (m**2/np.sqrt(2*math.pi*sigma**2))*np.exp(-(m-mu)**2/(2*sigma**2))
+    return (1/np.sqrt(2*math.pi*sigma**2))*np.exp(-(m-mu)**2/(2*sigma**2))
 
 
-mu= 10
+mu= 5
 sigma= 1
 
 
@@ -355,8 +355,8 @@ for i in range(0, len(val_conv)):
 
 # SELEZIONE FINESTRA IN CUI LA SOLUZIONE TROVATA COINCIDE CON LA SOLUZIONE CORRETTA E AGGIUNTA DI ZERI
 
-mask_min= 15.15
-mask_max= 25.15
+mask_min= 5
+mask_max= 15
 
 #numero di zeri aggiunti a destra e a sinistra
 num_zeri= 100
@@ -405,7 +405,7 @@ ax.plot(val_conv, conv, linestyle="-", color="red", marker="", label="Soluzione 
 
 ax.set_xlabel("M [M_sun]")
 ax.set_ylabel("F(M)")
-ax.set_xlim(masse[0], masse[-1])
+ax.set_xlim(max(masse[0], val_conv[0]), min(masse[-1], val_conv[-1]))
 
 ax.legend()
 
@@ -494,20 +494,6 @@ plt.tight_layout()
 
 # calcolo di f_m
 
-uni= np.ones(len(tras))
-
-'''
-for i in range(0, int(len(uni)/2)):
-
-    var= np.random.rand()
-
-    estraz= int(var + 0.5) - (1 - int(var + 0.5))
-
-    uni[i]= estraz
-    uni[len(uni)-1-i]= estraz
-
-#tras=tras*uni
-'''
 
 f_m= np.fft.ifft( np.sqrt(tras) )
 
