@@ -51,17 +51,17 @@ mask_max= 25.15
 
 
 # Numero di zeri aggiunti a destra e a sinistra dell'array contenente f(M) dopo che è stato selezionato nella sola finestra di cui si è parlato sopra
-num_zeri= 100
+num_zeri= 200
 
 
 
 # Se opzione_smooth è pari a media_mobile, la funzione F(M) viene smussata tramite il metodo della media mobile con finestre indipendenti. Se invece è pari a media_mobile_1, si utilizza il metodo della media mobile con finestre dipendenti.  Se invece è pari a S_V, allora lo smussamento avviene mediante un filtro di Savitzky Golay
-opzione_smooth= media_mobile
+opzione_smooth= "media_mobile_1"
 
 
 
 # Se opzione_smooth è pari a media_mobile o a media_mobile_1, allora è necessario indicare lung_sottoin, ossia la lunghezza dei sottointervalli di cui si calcola la media
-lung_sottoin= 10
+lung_sottoin= 20
 
 
 
@@ -415,10 +415,10 @@ F_M= np.concatenate((F_M, array_zeri))
 # SMUSSAMENTO TRAMITE LA TECNICA DELLA MEDIA MOBILE (DIVIDO IN FINESTRE INDIPENDENTI, QUINDI SI RIDUCE IL NUMERO DEI PUNTI ALLA FINE)
 # divido in sottointervalli e per ognuna calcolo la media, le finestra successiva non condivide alcun punto con quella precedente, quindi la dimensione finale è pari alla dimensione iniziale diviso la lunghezza della finestra
 
-if (opzione_smooth==media_mobile):
+if (opzione_smooth=="media_mobile"):
 
-    masse_medie= []
-    F_M_medie= []
+    masse_medie= np.zeros(int( len(F_M)/lung_sottoin ))
+    F_M_medie= np.zeros(int( len(F_M)/lung_sottoin ))
 
     for i in range(0, int( len(F_M)/lung_sottoin ) ):
 
@@ -450,7 +450,7 @@ if (opzione_smooth==media_mobile):
 
 
 
-if (opzione_smooth==media_mobile_1):
+if (opzione_smooth=="media_mobile_1"):
 
     masse_medie_1= np.zeros( len(F_M) - lung_sottoin )
     F_M_medie_1= np.zeros( len(F_M) - lung_sottoin )
@@ -484,7 +484,7 @@ if (opzione_smooth==media_mobile_1):
 
 # SMUSSAMENTO TRAMITE FILTRO DI SAVITZKY GOLAY
 
-if (opzione_smooth==S_V):
+if (opzione_smooth=="S_V"):
 
     F_M= scipy.signal.savgol_filter(F_M, wind_size, poly_order)
 
@@ -626,9 +626,9 @@ if ( disegna==True ):
 
     def f_m_funzione(m, mu, sigma):
 
-        return (1/np.sqrt(2*math.pi*sigma**2))*np.exp(-(m-mu)**2/(2*sigma**2))
+        return (m**2/np.sqrt(2*math.pi*sigma**2))*np.exp(-(m-mu)**2/(2*sigma**2))
 
-    mu= 5
+    mu= 10
     sigma= 1
 
     plt.plot(masse_f_m, f_m_funzione(masse_f_m, mu, sigma), linestyle="-", color="orange", label="Soluzione Esatta")
