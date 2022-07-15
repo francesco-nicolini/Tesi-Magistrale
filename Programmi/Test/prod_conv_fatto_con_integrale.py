@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 K= 500
 
-mu= 10
+mu= 5
 sigma= 1
 
 
@@ -16,7 +16,7 @@ sigma= 1
 
 def f_m(m, mu, sigma):
 
-    return (m**2/np.sqrt(2*math.pi*sigma**2))*np.exp(-(m-mu)**2/(2*sigma**2))
+    return (1/np.sqrt(2*math.pi*sigma**2))*np.exp(-(m-mu)**2/(2*sigma**2))
 
 
 

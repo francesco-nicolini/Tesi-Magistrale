@@ -2,8 +2,8 @@ import numpy as np
 from numpy.linalg import svd
 import matplotlib.pyplot as plt
 import math
-import keyboard
-
+from scipy.optimize import minimize
+from scipy.optimize import Bounds
 
 
 # OPZIONI VARIE
@@ -57,7 +57,7 @@ num_zeri= 100
 
 
 # Se opzione_smooth è pari a media_mobile, la funzione F(M) viene smussata tramite il metodo della media mobile con finestre indipendenti. Se invece è pari a media_mobile_1, si utilizza il metodo della media mobile con finestre dipendenti.  Se invece è pari a S_V, allora lo smussamento avviene mediante un filtro di Savitzky Golay
-opzione_smooth= "media_mobile_1"
+opzione_smooth= "media_mobile_2"
 
 
 
@@ -72,6 +72,10 @@ poly_order= 3
 
 
 
+# f_m_val_iniz contiene la lista dei valori iniziali per f_m richiesti per procedere con la minimizazione
+'''
+f_m_val_iniz=[1]*( )
+'''
 
 
 
@@ -338,7 +342,7 @@ F_M= np.dot(F_M, omega_GW)
 
 # definizione di f(m)
 
-def f_m(m, mu, sigma):
+def f_m_funzione(m, mu, sigma):
 
     return (1/np.sqrt(2*math.pi*sigma**2))*np.exp(-(m-mu)**2/(2*sigma**2))
 
@@ -362,7 +366,7 @@ for i in range(0, len(val_conv)):
 
     for j in range(0, len(masse)):
 
-        prod= f_m(masse[j], mu, sigma)*f_m(val_conv[i]-masse[j], mu, sigma)
+        prod= f_m_funzione(masse[j], mu, sigma)*f_m_funzione(val_conv[i]-masse[j], mu, sigma)
 
         if( j==0 or j==len(masse)-1 ):
             integrale+= dM*prod/2
@@ -511,13 +515,79 @@ ax.plot(val_conv, conv, linestyle="-", color="red", marker="", label="Soluzione 
 
 ax.set_xlabel("M [M_sun]")
 ax.set_ylabel("F(M)")
-ax.set_xlim(max(masse[0], val_conv[0]), min(masse[-1], val_conv[-1]))
+#ax.set_xlim(np.max(masse[0], val_conv[0]), np.min(masse[-1], val_conv[-1]))
 
 
 ax.legend()
 plt.tight_layout()
 
 
+plt.show()
+
+
+
+
+
+
+
+# RICERCA DI f(m) MEDIANTE UN ALGORITMO DI MINIMIZZAZIONE
+
+
+# dal momento che si vuole effettuare la minimizzazione considerando esclusivamente i valori positivi della massa, seleziono esclusivamente i valori di F_M corrispondenti
+
+mask= masse>0
+
+masse= masse[mask]
+F_M= F_M[mask]
+
+
+
+# L'array da minimizzare corrispondente ad f_m deve essere definito in un intervallo in massa che ha come estremi 0 e la meta del valore massimo dell'intervallo in cui è definito F_M, inoltre questa seconda lista di masse si deve costruire con il doppio della sensibilità (la differenza tra valori successivi della massa è pari a metà rispetto alla lista di F_M). In questo modo, la lista del prodotto di convoluizone avrà il doppio della dimensione della lista di F_M, tuttavia mediando elementi successivi si avrà uno stesso numero di componenti, inoltre le due liste saranno definite nello stesso intervallo in massa
+
+masse_f_m= np.linspace(masse[0], masse[-1]/2, len(masse))
+dm_f= masse_f_m[1] - masse_f_m[0]
+
+
+# Scelta dei valori iniziali
+
+f_m_val_iniz=[0.1]*len(masse_f_m)
+
+
+
+# E' la funzione da minimizzare, f_m contiene le variabili, dm_f contiene la differenza tra due elementi successivi nella lista delle masse corrispondenti a f_m, mentre F_M è la soluzione trovata precedentemente mediante la fattorizzazione SVD che deve essere confrontata con il prodoto di convoluzione di f_m per se stessa
+
+def funz_minim(f_m, dm_f, F_M):
+
+    prod= dm_f*np.convolve(f_m, f_m, mode="full")
+
+    prod_media= np.zeros(len(f_m))
+
+    for i in range( 0, len(prod_media)):
+
+        prod_media[i]= ( prod[2*i] + prod[2*i+1] )/2
+
+    somma= 0
+
+    for i in range(0, len(F_M)):
+
+        somma+= ( prod_media[i] - F_M[i] )**2
+
+    return somma
+
+
+# Minimizzazione
+
+# imposizione dei limiti per le diverse varuabili (devono essere tutte maggiori di zero)
+
+minimi=[0]*len(f_m_val_iniz)
+massimi=[np.inf]*len(f_m_val_iniz)
+
+
+bounds= Bounds(minimi, massimi)
+
+risultati= minimize(funz_minim, f_m_val_iniz, args=(dm_f, F_M), method="TNC", bounds= bounds, options={'disp': True})
+
+f_m_risult= risultati.x
 
 
 
@@ -527,86 +597,13 @@ plt.tight_layout()
 
 
 
-# calcolo della trasformata del prodotto di convoluzione e sua rappresentazione grafica
-tras= np.fft.fft(F_M)
 
-n= F_M.size
-dm= masse[1] - masse[0]
-k_masse= np.fft.fftfreq( n, d=dm)
-
-asse_x= np.fft.fftshift(k_masse)
-
-asse_x= k_masse
-
-fig= plt.figure()
-
-plt.subplot(2,2,1)
-
-plt.title("Trasformata del Prodotto di Convoluzione (Componenete Reale)")
-
-plt.plot(asse_x, tras.real)
-plt.plot(asse_x, 0*asse_x, linestyle="-", color="black", linewidth=0.8)
-
-plt.xlim(min(asse_x), max(asse_x))
-
-plt.xlabel("Frequenza")
-plt.ylabel("Parte Reale")
-
-
-plt.subplot(2,2,3)
-
-plt.title("Trasformata del Prodotto di Convoluzione (Componenete Immaginaria)")
-
-plt.plot(asse_x, tras.imag)
-plt.plot(asse_x, 0*asse_x, linestyle="-", color="black", linewidth=0.8)
-
-plt.xlim(min(asse_x), max(asse_x))
-
-plt.xlabel("Frequenza")
-plt.ylabel("Parte Immaginaria")
-
-plt.subplot(2,2,2)
-
-plt.title("Trasformata del Prodotto di Convoluzione (Modulo)")
-
-plt.plot(asse_x, abs(tras))
-plt.plot(asse_x, 0*asse_x, linestyle="-", color="black", linewidth=0.8)
-
-plt.xlim(min(asse_x), max(asse_x))
-
-plt.xlabel("Frequenza")
-plt.ylabel("Modulo")
-
-plt.subplot(2,2,4)
-
-plt.title("Trasformata del Prodotto di Convoluzione (Fase)")
-
-plt.plot(asse_x, np.angle(tras))
-plt.plot(asse_x, 0*asse_x, linestyle="-", color="black", linewidth=0.8)
-
-plt.xlim(min(asse_x), max(asse_x))
-
-plt.xlabel("Frequenza")
-plt.ylabel("Fase")
-
-plt.tight_layout()
-
-
-# calcolo di f_m
-
-
-f_m= np.fft.ifft( np.sqrt(tras) )
-
-n= tras.size
-dk= k_masse[1] - k_masse[0]
-masse_f_m= np.fft.fftfreq( n, d=dk)
-masse_f_m= np.fft.fftshift(masse_f_m)
+# GRAFICO DEI RISULTATI OTTENUTI
 
 fig= plt.figure()
 
-plt.subplot(2,1,1)
 
-plt.plot(masse_f_m, f_m, linestyle="-", color="blue", label="Soluzione Individuata")
+plt.plot(masse_f_m, f_m_risult, linestyle="-", color="blue", label="Soluzione Individuata")
 
 
 if ( disegna==True ):
@@ -628,14 +625,7 @@ plt.ylabel("f(m)")
 
 plt.legend()
 
-
-plt.subplot(2,1,2)
-
-plt.title("Fase")
-
-plt.plot(masse_f_m, np.angle(f_m), linestyle="", marker=".", color="blue", label="Soluzione Individuata")
-
-
-
 plt.tight_layout()
 plt.show()
+
+
