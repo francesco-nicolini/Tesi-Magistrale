@@ -540,6 +540,11 @@ mask= masse>0
 masse= masse[mask]
 F_M= F_M[mask]
 
+if( len(F_M)%2!=0 ):
+
+    masse= masse[:-1]
+    F_M= F_M[:-1]
+
 
 
 # L'array da minimizzare corrispondente ad f_m deve essere definito in un intervallo in massa che ha come estremi 0 e la meta del valore massimo dell'intervallo in cui è definito F_M, inoltre questa seconda lista di masse si deve costruire con il doppio della sensibilità (la differenza tra valori successivi della massa è pari a metà rispetto alla lista di F_M). In questo modo, la lista del prodotto di convoluizone avrà il doppio della dimensione della lista di F_M, tuttavia mediando elementi successivi si avrà uno stesso numero di componenti, inoltre le due liste saranno definite nello stesso intervallo in massa
@@ -559,6 +564,8 @@ f_m_val_iniz=[0.1]*len(masse_f_m)
 def funz_minim(f_m, dm_f, F_M):
 
     prod= dm_f*np.convolve(f_m, f_m, mode="full")
+
+    prod= np.append(prod, [0])
 
     prod_media= np.zeros(len(f_m))
 
