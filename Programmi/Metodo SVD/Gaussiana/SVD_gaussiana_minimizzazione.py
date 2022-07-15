@@ -56,12 +56,12 @@ num_zeri= 100
 
 
 
-# Se opzione_smooth è pari a media_mobile, la funzione F(M) viene smussata tramite il metodo della media mobile con finestre indipendenti. Se invece è pari a media_mobile_1, si utilizza il metodo della media mobile con finestre dipendenti.  Se invece è pari a S_V, allora lo smussamento avviene mediante un filtro di Savitzky Golay
-opzione_smooth= "media_mobile_2"
+# Se opzione_smooth è pari a "media_mobile_1", la funzione F(M) viene smussata tramite il metodo della media mobile con finestre indipendenti. Se invece è pari a "media_mobile_1", si utilizza il metodo della media mobile con finestre dipendenti.  Se invece è pari a "S_V", allora lo smussamento avviene mediante un filtro di Savitzky Golay
+opzione_smooth= "media_mobile_1"
 
 
 
-# Se opzione_smooth è pari a media_mobile o a media_mobile_1, allora è necessario indicare lung_sottoin, ossia la lunghezza dei sottointervalli di cui si calcola la media
+# Se opzione_smooth è pari a media_mobile, allora è necessario indicare lung_sottoin, ossia la lunghezza dei sottointervalli di cui si calcola la media
 lung_sottoin= 10
 
 
@@ -605,12 +605,53 @@ f_m_risult= risultati.x
 
 
 
+# SMUSSAMENTO TRAMITE LA TECNICA DELLA MEDIA MOBILE (DIVIDO IN FINESTRE CHE CONDIVIDONO DIVERSI PUNTU)
+# creo una finestra e calcolo media, la finestra successiva si crea partendo dalla precedente facendo scorrere di un valore a destra, quindi vengono condivisi un numero di punti pari alla lunghezza della finestra meno uno. La dimensione finale è pari a alla dimensione iniziale meno la lunghezza della finestra
+
+
+
+if (opzione_smooth=="media_mobile_1"):
+
+    masse_f_m_medie= np.zeros( len(F_M) - lung_sottoin )
+    f_m_medie= np.zeros( len(F_M) - lung_sottoin )
+
+
+    for i in range( int(lung_sottoin/2), len(f_m_risult) - int(lung_sottoin/2)):
+
+        sum= 0
+
+        for j in range( -int(lung_sottoin/2), int(lung_sottoin/2)):
+
+            sum+= f_m_risult[i + j]
+
+        media= sum/lung_sottoin
+
+        masse_f_m_medie[i-int(lung_sottoin/2)]= masse_f_m[i]
+        f_m_medie[i-int(lung_sottoin/2)]= media
+
+    '''
+    masse= masse_f_m_medie
+    f_m_risult= f_m_medie
+    '''
+
+
+
+
+
+
+
+
+
 # GRAFICO DEI RISULTATI OTTENUTI
 
 fig= plt.figure()
 
 
-plt.plot(masse_f_m, f_m_risult, linestyle="-", color="blue", label="Soluzione Individuata")
+plt.plot(masse_f_m, f_m_risult, linestyle="-", marker="", color="blue", label="Soluzione Individuata")
+
+if (opzione_smooth=="media_mobile_1"):
+
+    plt.plot(masse_f_m_medie, f_m_medie, linestyle="-", marker="", color="red", label="Soluzione individuata con\nmedia mobile")
 
 
 if ( disegna==True ):
@@ -626,9 +667,47 @@ if ( disegna==True ):
 
 
 
+
 plt.title("FUNZIONE LOGARITMICA DI MASSA")
 plt.xlabel("Massa [M_sole]")
 plt.ylabel("f(m)")
+
+plt.legend()
+
+
+
+
+
+
+
+
+
+# CONFRONTO TRA IL PRODOTTO DI CONVOLUZIONE DI f_m_risult CON SE STESSO E F_M
+
+dM= masse_f_m[1] - masse_f_m[0]
+conv= dM*np.convolve(f_m_risult, f_m_risult, mode="full")
+
+masse_conv= np.linspace(0, len(conv), len(conv), endpoint=False)*dM
+
+
+fig= plt.figure()
+
+plt.plot(masse_conv, conv, linestyle="-", color="blue", label="f(m)_min*f(m)_min")
+plt.plot(masse, F_M, linestyle="-", color="orange", marker="", label="F(M)")
+
+plt.title("PRODOTTO DI CONVOLUZIONE DELLA FUNZIONE LOGARITMICA DI MASSA")
+plt.xlabel("Massa [M_sole]")
+plt.ylabel("f(m)*f(m)")
+
+
+
+
+
+
+
+
+
+
 
 plt.legend()
 
