@@ -613,7 +613,7 @@ if(elimina_negativi=="parabola"):
 
     F_M= F_M_par
 
-
+    print("\n\n\n")
 
 
 
