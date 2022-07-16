@@ -78,8 +78,7 @@ elimina_negativi="parabola"
 
 
 # Se elimina_negativi="parabola", si trasformano in parabola tutti i punti degli intervalli in cui F(M) è minore di zero. Se gli indici degli estremi di questi intervalli sono i e j, allora il valore dell'indice  dell'estremo con il valore di F(M) più basso non viene modificato, mentre l'altro può essere spostato di shift_da_bordo (verso sinistra se questo indice è i e verso destra se invece è j)
-shift_da_bordo= 10
-
+shift_da_bordo= 50
 
 
 
@@ -349,6 +348,38 @@ F_M= np.dot(F_M, omega_GW)
 
 
 
+# SELEZIONE FINESTRA IN CUI LA SOLUZIONE TROVATA COINCIDE CON LA SOLUZIONE CORRETTA E AGGIUNTA DI ZERI
+
+
+mask= ( masse>mask_min ) & ( masse<mask_max )
+
+masse= masse[mask]
+F_M= F_M[mask]
+
+
+dm= masse[1] - masse[0]
+
+masse_sotto= np.linspace( masse[0] - dm - (num_zeri-1)*dm, masse[0] - dm, num=num_zeri)
+masse= np.concatenate((masse_sotto, masse))
+
+masse_sopra= np.linspace(masse[-1] + dm, masse[-1] + dm + (num_zeri-1)*dm, num=num_zeri)
+masse= np.concatenate((masse, masse_sopra))
+
+
+array_zeri= np.zeros(num_zeri)
+
+F_M= np.concatenate((array_zeri, F_M))
+F_M= np.concatenate((F_M, array_zeri))
+
+
+
+
+
+
+
+
+
+
 # CALCOLO PRODOTTO DI CONVOLUZIONE PARTENDO DAL RISULTATO ESATTO
 
 # definizione di f(m)
@@ -395,223 +426,104 @@ for i in range(0, len(val_conv)):
 
 
 
-# SELEZIONE FINESTRA IN CUI LA SOLUZIONE TROVATA COINCIDE CON LA SOLUZIONE CORRETTA E AGGIUNTA DI ZERI
-
-
-mask= ( masse>mask_min ) & ( masse<mask_max )
-
-masse= masse[mask]
-F_M= F_M[mask]
-
-
-dm= masse[1] - masse[0]
-
-masse_sotto= np.linspace( masse[0] - dm - (num_zeri-1)*dm, masse[0] - dm, num=num_zeri)
-masse= np.concatenate((masse_sotto, masse))
-
-masse_sopra= np.linspace(masse[-1] + dm, masse[-1] + dm + (num_zeri-1)*dm, num=num_zeri)
-masse= np.concatenate((masse, masse_sopra))
-
-
-array_zeri= np.zeros(num_zeri)
-
-F_M= np.concatenate((array_zeri, F_M))
-F_M= np.concatenate((F_M, array_zeri))
-
-
-
-
-
-
-
-
-
-
-# SMUSSAMENTO TRAMITE LA TECNICA DELLA MEDIA MOBILE (DIVIDO IN FINESTRE INDIPENDENTI, QUINDI SI RIDUCE IL NUMERO DEI PUNTI ALLA FINE)
-# divido in sottointervalli e per ognuna calcolo la media, le finestra successiva non condivide alcun punto con quella precedente, quindi la dimensione finale è pari alla dimensione iniziale diviso la lunghezza della finestra
-
-if (opzione_smooth=="media_mobile"):
-
-    masse_medie= []
-    F_M_medie= []
-
-    for i in range(0, int( len(F_M)/lung_sottoin ) ):
-
-        sum= 0
-
-        for j in range( 0, lung_sottoin):
-
-            sum+= F_M[lung_sottoin*i + j]
-
-        media= sum/lung_sottoin
-
-        F_M_medie[i]= media
-        masse_medie[i]= masse[lung_sottoin*i + int(j/2)]
-
-
-    masse= masse_medie
-    F_M= F_M_medie
-
-
-
-
-
-
-
-
-
-# SMUSSAMENTO TRAMITE LA TECNICA DELLA MEDIA MOBILE (DIVIDO IN FINESTRE CHE CONDIVIDONO DIVERSI PUNTU)
-# creo una finestra e calcolo media, la finestra successiva si crea partendo dalla precedente facendo scorrere di un valore a destra, quindi vengono condivisi un numero di punti pari alla lunghezza della finestra meno uno. La dimensione finale è pari a alla dimensione iniziale meno la lunghezza della finestra
-
-
-
-if (opzione_smooth=="media_mobile_1"):
-
-    masse_medie_1= np.zeros( len(F_M) - lung_sottoin )
-    F_M_medie_1= np.zeros( len(F_M) - lung_sottoin )
-
-
-    for i in range( int(lung_sottoin/2), len(F_M) - int(lung_sottoin/2)):
-
-        sum= 0
-
-        for j in range( -int(lung_sottoin/2), int(lung_sottoin/2)):
-
-            sum+= F_M[i + j]
-
-        media= sum/lung_sottoin
-
-        F_M_medie_1[i-int(lung_sottoin/2)]= media
-        masse_medie_1[i-int(lung_sottoin/2)]= masse[i]
-
-
-    masse= masse_medie_1
-    F_M= F_M_medie_1
-
-
-
-
-
-
-
-
-
-
-# SMUSSAMENTO TRAMITE FILTRO DI SAVITZKY GOLAY
-
-if (opzione_smooth=="S_V"):
-
-    F_M= scipy.signal.savgol_filter(F_M, wind_size, poly_order)
-
-
-
-
-
-
-
-
-
 
 # SOSTITUZIONE PARTI NEGATIVE DI F_M CON PARABOLE
 
-if(elimina_negativi=="parabola"):
 
 
-    F_M_par= np.zeros(len(F_M))
+F_M_par= np.zeros(len(F_M))
 
-    for i in range(0, len(F_M)):
+for i in range(0, len(F_M)):
 
-        F_M_par[i]= F_M[i]
-
-
-
-    # ricerca indici degli estremi degli intervalli in cui F_M è negativa
-
-    indici= np.where( F_M_par<0 )
-
-    indici= indici[0]
-
-
-    inizio=[indici[0]]
-    fine=[]
-
-
-    for i in range( 2, len(indici)):
-
-
-        if ( ( (indici[i] - indici[i-1]) > 1 ) and ( ( indici[i-1] - indici[i-2] ) == 1) ):
-
-            inizio.append(indici[i])
-            fine.append(indici[i-1])
-
-    fine.append(indici[-1])
-
-
-    # stampa degli estremi degli intervalli di massa in cui F(M) è minore di zero
-    print("\nGli intervalli in massa in cui F(M) è minore di zero sono:")
-
-    for i in range(0, len(inizio)):
-
-        print("[{:.3},{:.3}]".format(masse[inizio[i]], masse[fine[i]]))
+    F_M_par[i]= F_M[i]
 
 
 
-    # sostituzione degli intervalli con parabole
+# ricerca indici degli estremi degli intervalli in cui F_M è negativa
 
-    # ind_min e ind_max sono gli indici degli estremi dell'intervallo in cui la funzione è minor di zero
+indici= np.where( F_M_par<0 )
 
-    def coefficienti (ind_min, ind_max):
-
-        x_0= masse[ind_min-1]
-        x_1= masse[ind_max+1]
-        y_0= F_M_par[ind_min-1]
-        y_1= F_M_par[ind_max+1]
-
-        if ( y_0<y_1 ):
-            b= x_0
-            a= y_1/(x_1 - b)**2
-
-        else:
-            b= x_1
-            a= y_0/(x_0 - b)**2
-
-        print("\na= {:.4}, b={:.4}".format(a, b))
-
-        return a, b
+indici= indici[0]
 
 
-    def parabola(x, a, b):
+inizio=[indici[0]]
+fine=[]
 
-        return a*(x - b)**2
+
+for i in range( 2, len(indici)):
 
 
-    for k in range(0, len(inizio)):
+    if ( ( (indici[i] - indici[i-1]) > 1 ) and ( ( indici[i-1] - indici[i-2] ) == 1) ):
+
+        inizio.append(indici[i])
+        fine.append(indici[i-1])
+
+fine.append(indici[-1])
+
+
+# stampa degli estremi degli intervalli di massa in cui F(M) è minore di zero
+print("\nGli intervalli in massa in cui F(M) è minore di zero sono:")
+
+for i in range(0, len(inizio)):
+
+    print("[{:.3},{:.3}]".format(masse[inizio[i]], masse[fine[i]]))
 
 
 
-        if ( F_M_par[inizio[k] -1 ]<F_M_par[fine[k] + 1] ):
-            ind_sx= inizio[k]
-            ind_dx= fine[k] + shift_da_bordo
+# sostituzione degli intervalli con parabole
 
-        else:
-            ind_sx= inizio[k] - shift_da_bordo
-            ind_dx= fine[k]
+# ind_min e ind_max sono gli indici degli estremi dell'intervallo in cui la funzione è minor di zero
+
+def coefficienti (ind_min, ind_max):
+
+    x_0= masse[ind_min-1]
+    x_1= masse[ind_max+1]
+    y_0= F_M_par[ind_min-1]
+    y_1= F_M_par[ind_max+1]
+
+    if ( y_0<y_1 ):
+        b= x_0
+        a= y_1/(x_1 - b)**2
+
+    else:
+        b= x_1
+        a= y_0/(x_0 - b)**2
+
+    print("\na= {:.4}, b={:.4}".format(a, b))
+
+    return a, b
 
 
-        a, b= coefficienti(ind_sx, ind_dx)
+def parabola(x, a, b):
 
-        for i in range (ind_sx, ind_dx):
-
-            F_M_par[i]= parabola(masse[i], a, b)
-
-    indici_rest= np.where( F_M_par < 0 )
-
-    for i in indici_rest:
-
-        F_M_par[i]= 0
+    return a*(x - b)**2
 
 
-    F_M= F_M_par
+for k in range(0, len(inizio)):
+
+
+
+    if ( F_M_par[inizio[k] -1 ]<F_M_par[fine[k] + 1] ):
+        ind_sx= inizio[k]
+        ind_dx= fine[k] + shift_da_bordo
+
+    else:
+        ind_sx= inizio[k] - shift_da_bordo
+        ind_dx= fine[k]
+
+
+    a, b= coefficienti(ind_sx, ind_dx)
+
+    for i in range (ind_sx, ind_dx):
+
+        F_M_par[i]= parabola(masse[i], a, b)
+
+indici_rest= np.where( F_M_par < 0 )
+
+for i in indici_rest:
+
+    F_M_par[i]= 0
+
 
 
 
@@ -630,8 +542,10 @@ ax.set_title("Soluzione Individuata Considerando {0} Valori Singolari".format(nu
 ax.plot([masse[0],masse[-1]], [0,0], linestyle="-", color="black", marker="", linewidth=0.75, alpha=1)
 
 ax.plot(masse, F_M, linestyle="-", color="blue", marker="", label="Soluzione Ottenuta")
+ax.plot(masse, F_M_par, linestyle="-", color="orange", marker="", label="Soluzione Senza\nValori Negativi")
+'''
 ax.plot(val_conv, conv, linestyle="-", color="red", marker="", label="Soluzione Esatta: $\\mu$= {0}, $\\sigma$= {1}".format( mu, sigma))
-
+'''
 
 ax.set_xlabel("M [M_sun]")
 ax.set_ylabel("F(M)")
@@ -643,198 +557,3 @@ plt.tight_layout()
 
 
 plt.show()
-
-
-
-
-
-
-
-# RICERCA DI f(m) MEDIANTE UN ALGORITMO DI MINIMIZZAZIONE
-
-
-# dal momento che si vuole effettuare la minimizzazione considerando esclusivamente i valori positivi della massa, seleziono esclusivamente i valori di F_M corrispondenti
-
-mask= masse>0
-
-masse= masse[mask]
-F_M= F_M[mask]
-
-if( len(F_M)%2!=0 ):
-
-    masse= masse[:-1]
-    F_M= F_M[:-1]
-
-
-
-# L'array da minimizzare corrispondente ad f_m deve essere definito in un intervallo in massa che ha come estremi 0 e la meta del valore massimo dell'intervallo in cui è definito F_M, inoltre questa seconda lista di masse si deve costruire con il doppio della sensibilità (la differenza tra valori successivi della massa è pari a metà rispetto alla lista di F_M). In questo modo, la lista del prodotto di convoluizone avrà il doppio della dimensione della lista di F_M, tuttavia mediando elementi successivi si avrà uno stesso numero di componenti, inoltre le due liste saranno definite nello stesso intervallo in massa
-
-masse_f_m= np.linspace(masse[0], masse[-1]/2, len(masse))
-dm_f= masse_f_m[1] - masse_f_m[0]
-
-
-# Scelta dei valori iniziali
-
-f_m_val_iniz=[0.1]*len(masse_f_m)
-
-
-
-# E' la funzione da minimizzare, f_m contiene le variabili, dm_f contiene la differenza tra due elementi successivi nella lista delle masse corrispondenti a f_m, mentre F_M è la soluzione trovata precedentemente mediante la fattorizzazione SVD che deve essere confrontata con il prodoto di convoluzione di f_m per se stessa
-
-def funz_minim(f_m, dm_f, F_M):
-
-    prod= dm_f*np.convolve(f_m, f_m, mode="full")
-
-    prod= np.append(prod, [0])
-
-    prod_media= np.zeros(len(f_m))
-
-    for i in range( 0, len(prod_media)):
-
-        prod_media[i]= ( prod[2*i] + prod[2*i+1] )/2
-
-    somma= 0
-
-    for i in range(0, len(F_M)):
-
-        somma+= ( prod_media[i] - F_M[i] )**2
-
-    return somma
-
-
-# Minimizzazione
-
-# imposizione dei limiti per le diverse varuabili (devono essere tutte maggiori di zero)
-
-minimi=[0]*len(f_m_val_iniz)
-massimi=[np.inf]*len(f_m_val_iniz)
-
-
-bounds= Bounds(minimi, massimi)
-
-risultati= minimize(funz_minim, f_m_val_iniz, args=(dm_f, F_M), method="TNC", bounds= bounds, options={'disp': True})
-
-f_m_risult= risultati.x
-
-
-
-
-
-
-
-
-
-
-# SMUSSAMENTO TRAMITE LA TECNICA DELLA MEDIA MOBILE (DIVIDO IN FINESTRE CHE CONDIVIDONO DIVERSI PUNTU)
-# creo una finestra e calcolo media, la finestra successiva si crea partendo dalla precedente facendo scorrere di un valore a destra, quindi vengono condivisi un numero di punti pari alla lunghezza della finestra meno uno. La dimensione finale è pari a alla dimensione iniziale meno la lunghezza della finestra
-
-
-
-if (opzione_smooth=="media_mobile_1"):
-
-    masse_f_m_medie= np.zeros( len(F_M) - lung_sottoin )
-    f_m_medie= np.zeros( len(F_M) - lung_sottoin )
-
-
-    for i in range( int(lung_sottoin/2), len(f_m_risult) - int(lung_sottoin/2)):
-
-        sum= 0
-
-        for j in range( -int(lung_sottoin/2), int(lung_sottoin/2)):
-
-            sum+= f_m_risult[i + j]
-
-        media= sum/lung_sottoin
-
-        masse_f_m_medie[i-int(lung_sottoin/2)]= masse_f_m[i]
-        f_m_medie[i-int(lung_sottoin/2)]= media
-
-    '''
-    masse= masse_f_m_medie
-    f_m_risult= f_m_medie
-    '''
-
-
-
-
-
-
-
-
-
-# GRAFICO DEI RISULTATI OTTENUTI
-
-fig= plt.figure()
-
-
-plt.plot(masse_f_m, f_m_risult, linestyle="-", marker="", color="blue", label="Soluzione Individuata")
-
-if (opzione_smooth=="media_mobile_1"):
-
-    stringa="Soluzione individuata con\nmedia mobile con intervalli\ndi lunghezza {0}".format(lung_sottoin)
-    plt.plot(masse_f_m_medie, f_m_medie, linestyle="-", marker="", color="red", label=stringa)
-
-
-if ( disegna==True ):
-
-    def f_m_funzione(m, mu, sigma):
-
-        return (1/np.sqrt(2*math.pi*sigma**2))*np.exp(-(m-mu)**2/(2*sigma**2))
-
-    mu= 5
-    sigma= 1
-
-    plt.plot(masse_f_m, f_m_funzione(masse_f_m, mu, sigma), linestyle="-", color="orange", label="Soluzione Esatta")
-
-
-
-
-plt.title("FUNZIONE LOGARITMICA DI MASSA")
-plt.xlabel("Massa [M_sole]")
-plt.ylabel("f(m)")
-
-plt.legend()
-
-
-
-
-
-
-
-
-
-# CONFRONTO TRA IL PRODOTTO DI CONVOLUZIONE DI f_m_risult CON SE STESSO E F_M
-
-dM= masse_f_m[1] - masse_f_m[0]
-conv= dM*np.convolve(f_m_risult, f_m_risult, mode="full")
-
-masse_conv= np.linspace(0, len(conv), len(conv), endpoint=False)*dM
-
-
-fig= plt.figure()
-
-plt.plot(masse_conv, conv, linestyle="-", color="blue", label="f(m)_m*f(m)_m")
-plt.plot(masse, F_M, linestyle="-", color="orange", marker="", label="F(M)")
-
-plt.title("PRODOTTO DI CONVOLUZIONE DELLA FUNZIONE LOGARITMICA DI MASSA")
-plt.xlabel("Massa [M_sole]")
-plt.ylabel("f(m)*f(m)")
-
-plt.xlim( max(masse[0], masse_conv[0]), min(masse[-1], masse_conv[-1]))
-
-
-
-
-
-
-
-
-
-
-
-plt.legend()
-
-plt.tight_layout()
-plt.show()
-
-

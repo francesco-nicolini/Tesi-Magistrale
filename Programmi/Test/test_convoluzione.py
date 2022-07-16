@@ -1,4 +1,6 @@
 import numpy as np
+import math
+import matplotlib.pyplot as plt
 
 K=500
 
@@ -9,11 +11,11 @@ wind_y= 0.001
 
 def f_m(m, mu, sigma):
 
-    return (m**2/np.sqrt(2*math.pi*sigma**2))*np.exp(-(m-mu)**2/(2*sigma**2))
+    return (1/np.sqrt(2*math.pi*sigma**2))*np.exp(-(m-mu)**2/(2*sigma**2))
 
 asse= np.linspace(0, 30, K)
 
-mu= 10
+mu= 5
 sigma= 1
 
 a= f_m(asse, mu, sigma)
