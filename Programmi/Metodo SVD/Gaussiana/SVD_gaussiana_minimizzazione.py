@@ -83,6 +83,12 @@ shift_da_bordo= 10
 
 
 
+# L'opzione funzione definisce il tipo di funzione da minimizzare nella determinazione di f_m: se pari a "semplice" è pari semplicemente all domma dei quadrati delle differenze tra f_m*f_m e F(M); se è pari a "derivata_prima" si aggiunge un termine pari alla somma dei quadrati delle differenze tra elementi successivi di f_m (derivata prima discretizzata) per cost_prima; se è pari a "derivata_seconda" si aggiunge la somma dei quadrati della derivata seconda discretizzata moltiplicata per cost_seconda
+funzione= "semplice"
+cost_prima= 1
+cost_seconda= 1
+
+
 # f_m_val_iniz contiene la lista dei valori iniziali per f_m richiesti per procedere con la minimizazione
 '''
 f_m_val_iniz=[1]*( )
@@ -681,25 +687,97 @@ f_m_val_iniz=[0.1]*len(masse_f_m)
 
 # E' la funzione da minimizzare, f_m contiene le variabili, dm_f contiene la differenza tra due elementi successivi nella lista delle masse corrispondenti a f_m, mentre F_M è la soluzione trovata precedentemente mediante la fattorizzazione SVD che deve essere confrontata con il prodoto di convoluzione di f_m per se stessa
 
-def funz_minim(f_m, dm_f, F_M):
+if (funzione="semplice"):
 
-    prod= dm_f*np.convolve(f_m, f_m, mode="full")
+    def funz_minim(f_m, dm_f, F_M):
 
-    prod= np.append(prod, [0])
+        prod= dm_f*np.convolve(f_m, f_m, mode="full")
 
-    prod_media= np.zeros(len(f_m))
+        prod= np.append(prod, [0])
 
-    for i in range( 0, len(prod_media)):
+        prod_media= np.zeros(len(f_m))
 
-        prod_media[i]= ( prod[2*i] + prod[2*i+1] )/2
+        for i in range( 0, len(prod_media)):
 
-    somma= 0
+            prod_media[i]= ( prod[2*i] + prod[2*i+1] )/2
 
-    for i in range(0, len(F_M)):
+        somma= 0
 
-        somma+= ( prod_media[i] - F_M[i] )**2
+        for i in range(0, len(F_M)):
 
-    return somma
+            somma+= ( prod_media[i] - F_M[i] )**2
+
+        return somma
+
+
+
+if (funzione="derivata_prima"):
+
+    def funz_minim(f_m, dm_f, F_M):
+
+        prod= dm_f*np.convolve(f_m, f_m, mode="full")
+
+        prod= np.append(prod, [0])
+
+        prod_media= np.zeros(len(f_m))
+
+        for i in range( 0, len(prod_media)):
+
+            prod_media[i]= ( prod[2*i] + prod[2*i+1] )/2
+
+        somma= 0
+
+        for i in range(0, len(F_M)):
+
+            somma+= ( prod_media[i] - F_M[i] )**2
+
+
+        deriv= 0
+
+        for i in range(1, len(f_m)):
+
+            deriv+= (f_m[i] - f_m[i-1])**2
+
+        return somma + cost_prima*deriv
+
+
+
+if (funzione="derivata_seconda"):
+
+    def funz_minim(f_m, dm_f, F_M):
+
+        prod= dm_f*np.convolve(f_m, f_m, mode="full")
+
+        prod= np.append(prod, [0])
+
+        prod_media= np.zeros(len(f_m))
+
+        for i in range( 0, len(prod_media)):
+
+            prod_media[i]= ( prod[2*i] + prod[2*i+1] )/2
+
+        somma= 0
+
+        for i in range(0, len(F_M)):
+
+            somma+= ( prod_media[i] - F_M[i] )**2
+
+
+        deriv= 0
+
+        for i in range(1, len(f_m) -1):
+
+            deriv+= (f_m[i+1] - 2*f_m[i] + f_m[i-1])**2
+
+        return somma + cost_seconda*deriv
+
+
+
+
+
+
+
+
 
 
 # Minimizzazione
