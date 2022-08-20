@@ -27,7 +27,7 @@ option="read"
 # Path del file se option è uguale a "read", num è il numero di valori della frequenza considerati nel file che si vuole aprire
 num= 500
 
-file_name_omega="C:\\Users\\39366\\Dropbox\\PC\\Documents\\GitHub\\Tesi-Magistrale\\Programmi\\Metodo SVD\\Gaussiana\\file_txt\\omega_GW_" + str(num) + ".txt"
+file_name_omega="C:\\Users\\39366\\Dropbox\\PC\\Documents\\GitHub\\Tesi-Magistrale\\Programmi\\Metodo SVD\\Costante\\file_txt\\omega_GW_" + str(num) + ".txt"
 
 
 # Se option è pari a "read" ponendo disegna uguale a True verra realizzato il grafico della soluzione esatta nello stesso piano in cui vengono rappresentate le soluzioni trovate minimizzando
@@ -35,7 +35,7 @@ disegna=True
 
 
 # Path del file se disegna è uguale a True
-file_name_f_m="C:\\Users\\39366\\Dropbox\\PC\\Documents\\GitHub\\Tesi-Magistrale\\Programmi\\Metodo SVD\\Gaussiana\\file_txt\\f_m_" + str(num) + ".txt"
+file_name_f_m="C:\\Users\\39366\\Dropbox\\PC\\Documents\\GitHub\\Tesi-Magistrale\\Programmi\\Metodo SVD\\Costante\\file_txt\\f_m_" + str(num) + ".txt"
 
 
 
@@ -46,8 +46,8 @@ freq_max=10**(1)
 
 
 # Estremi della finestra in massa che si considera una volta ottenuta la funzione F(M) (i valori fuori si escludono poiche sono caratterizzati dalla presenza di artefatti)
-mask_min= 5
-mask_max= 15
+mask_min= 1.90
+mask_max= 20.8
 
 
 
@@ -84,7 +84,7 @@ shift_da_bordo= 10
 
 
 # L'opzione funzione definisce il tipo di funzione da minimizzare nella determinazione di f_m: se pari a "semplice" è pari semplicemente alla somma dei quadrati delle differenze tra f_m*f_m e F(M); se è pari a "derivata_prima" si aggiunge un termine pari alla somma dei quadrati delle differenze tra elementi successivi di f_m (derivata prima discretizzata) per cost_prima; se è pari a "derivata_seconda" si aggiunge la somma dei quadrati della derivata seconda discretizzata moltiplicata per cost_seconda
-funzione= "derivata_seconda"
+funzione= "semplice"
 cost_prima= 0.00000001
 cost_seconda= 0.01
 
@@ -328,7 +328,6 @@ for i in range(0, len(v)):
 
 
 
-
 # OTTENIEMTO DELLA SOLUZIONE
 
 v_i= 1/v
@@ -359,13 +358,19 @@ F_M= np.dot(F_M, omega_GW)
 
 # definizione di f(m)
 
-def f_m_funzione(m, mu, sigma):
 
-    return (1/np.sqrt(2*math.pi*sigma**2))*np.exp(-(m-mu)**2/(2*sigma**2))
+def f_m_funzione(m, costante, m_inf, m_sup):
+
+    if ( m_inf<m<m_sup ):
+        return costante
+
+    else:
+        return 0
 
 
-mu= 5
-sigma= 1
+costante= 3
+m_inf= 1
+m_sup= 10
 
 
 dM= masse[1] - masse[0]
@@ -383,7 +388,7 @@ for i in range(0, len(val_conv)):
 
     for j in range(0, len(masse)):
 
-        prod= f_m_funzione(masse[j], mu, sigma)*f_m_funzione(val_conv[i]-masse[j], mu, sigma)
+        prod= f_m_funzione(masse[j], costante, m_inf, m_sup)*f_m_funzione(val_conv[i]-masse[j], costante, m_inf, m_sup)
 
         if( j==0 or j==len(masse)-1 ):
             integrale+= dM*prod/2
@@ -636,7 +641,7 @@ ax.set_title("Soluzione Individuata Considerando {0} Valori Singolari".format(nu
 ax.plot([masse[0],masse[-1]], [0,0], linestyle="-", color="black", marker="", linewidth=0.75, alpha=1)
 
 ax.plot(masse, F_M, linestyle="-", color="blue", marker="", label="Soluzione Ottenuta")
-ax.plot(val_conv, conv, linestyle="-", color="red", marker="", label="Soluzione Esatta: $\\mu$= {0}, $\\sigma$= {1}".format( mu, sigma))
+ax.plot(val_conv, conv, linestyle="-", color="red", marker="", label="Soluzione Esatta: costante= {0},\nm_inf= {1}, m_sup={2}".format( costante, m_inf, m_sup))
 
 
 ax.set_xlabel("M [M_sun]")
@@ -828,10 +833,10 @@ if (opzione_smooth=="media_mobile_1"):
         masse_f_m_medie[i-int(lung_sottoin/2)]= masse_f_m[i]
         f_m_medie[i-int(lung_sottoin/2)]= media
 
-    '''
+
     masse= masse_f_m_medie
     f_m_risult= f_m_medie
-    '''
+
 
 
 
@@ -916,4 +921,4 @@ plt.legend()
 plt.tight_layout()
 plt.show()
 
-
+'''
