@@ -880,6 +880,7 @@ plt.title("FUNZIONE LOGARITMICA DI MASSA")
 plt.xlabel("Massa [M_sole]")
 plt.ylabel("f(m)")
 
+plt.xlim( masse_f_m[0], masse_f_m[-1])
 plt.legend()
 
 
