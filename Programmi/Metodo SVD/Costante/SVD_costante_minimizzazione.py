@@ -833,10 +833,10 @@ if (opzione_smooth=="media_mobile_1"):
         masse_f_m_medie[i-int(lung_sottoin/2)]= masse_f_m[i]
         f_m_medie[i-int(lung_sottoin/2)]= media
 
-
-    masse= masse_f_m_medie
+    '''
+    masse_f_m= masse_f_m_medie
     f_m_risult= f_m_medie
-
+    '''
 
 
 
@@ -861,14 +861,17 @@ if (opzione_smooth=="media_mobile_1"):
 
 if ( disegna==True ):
 
-    def f_m_funzione(m, mu, sigma):
+    f_m_esatto= np.zeros(len(masse_f_m))
 
-        return (1/np.sqrt(2*math.pi*sigma**2))*np.exp(-(m-mu)**2/(2*sigma**2))
+    for i in range(0, len(f_m_esatto)):
 
-    mu= 5
-    sigma= 1
+        f_m_esatto[i]= f_m_funzione(masse_f_m[i], costante, m_inf, m_sup)
 
-    plt.plot(masse_f_m, f_m_funzione(masse_f_m, mu, sigma), linestyle="-", color="orange", label="Soluzione Esatta")
+
+    plt.plot(masse_f_m, f_m_esatto, linestyle="-", color="orange", label="Soluzione Esatta")
+    plt.plot([m_inf, m_inf], [costante, costante], linestyle="--", color="orange" )
+    plt.plot([m_sup, m_sup], [costante, costante], linestyle="--", color="orange" )
+
 
 
 
