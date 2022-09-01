@@ -115,7 +115,15 @@ def f_m(m, bordo, q, r, t, sigma, D, mu):
     mu= float(mu)
 
     if( m<bordo ):
-        return q*m**2+r*m+t
+
+        risultato= q*m**2+r*m+t
+
+        if ( risultato<0 ):
+            return 0
+
+        else:
+            return risultato
+
 
     else:
         return D*np.exp( -(m-mu)**2/(2*sigma**2) )
@@ -194,7 +202,7 @@ plt.plot(masse, distrib, linestyle="-", marker="", color= "navy")
 plt.plot([minimo, massimo], [0, 0], marker="", linestyle="-", color="black", linewidth=0.8)
 
 plt.xlabel("masse [M_sol]")
-plt.xlabel("distribuzione")
+plt.ylabel("distribuzione")
 
 plt.xlim(minimo, massimo)
 
@@ -242,7 +250,7 @@ distrib= np.zeros(len(masse))
 
 for i in range(0, len(distrib)):
 
-    distrib[i]= f_m(masse[i], costante, m_inf, m_sup)
+    distrib[i]= f_m(masse[i], bordo, q, r, t, sigma, D, mu)
 
 
 file_name_omega= path + "\\" + name_omega

@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-import numpy
+import numpy as np
 from sympy import symbols, nsolve, exp
 
 
