@@ -14,7 +14,7 @@ from sympy import symbols, nsolve, exp
 K=500
 
 # num_sing contiene il numero di valori singolari che si vogliono considerare per la risoluzione del problema
-num_sing= 18
+num_sing= 8
 
 # Estremo superiore e estremo inferiore delle masse considerate nell'integrale e scarto tra due masse consecutive
 m_min=1
@@ -47,13 +47,13 @@ freq_max=10**(1)
 
 
 # Estremi della finestra in massa che si considera una volta ottenuta la funzione F(M) (i valori fuori si escludono poiche sono caratterizzati dalla presenza di artefatti)
-mask_min= 1.90
-mask_max= 20.8
+mask_min= 15
+mask_max= 25
 
 
 
 # Numero di zeri aggiunti a destra e a sinistra dell'array contenente f(M) dopo che è stato selezionato nella sola finestra di cui si è parlato sopra
-num_zeri= 100
+num_zeri= 1000
 
 
 
@@ -88,6 +88,14 @@ shift_da_bordo= 10
 funzione= "semplice"
 cost_prima= 0.00000001
 cost_seconda= 0.01
+
+
+
+
+# se si pone valori_iniziali pari a gaussiana, allora il programma individua la gaussiana che meglio approssima F_M, trova quindi i parametri (ampiezza, media e deviazione standard) della gaussiana il cui prodotto di convoluzione con se stessa restituisce l'altra gaussiana e la utilizza come condizione iniziale. Con qualunque altro valore rende la scelta delle consizioni iniziali personalizzabile
+valori_iniziali="qualsiasi"
+
+
 
 
 # f_m_val_iniz contiene la lista dei valori iniziali per f_m richiesti per procedere con la minimizazione
@@ -371,7 +379,7 @@ def trova_coefficienti(q, r, t, bordo, sigma):
     f1= D*exp( -(bordo-mu)**2/(2*sigma**2) ) - r1
     f2= D*exp( -(bordo-mu)**2/(2*sigma**2) )*(-(bordo-mu)/sigma**2) - r2
 
-    return nsolve( (f1, f2), (D, mu), (6, 2.5) )
+    return nsolve( (f1, f2), (D, mu), (10, 10) )
 
 
 
@@ -398,16 +406,16 @@ def f_m_funzione(m, bordo, q, r, t, sigma, D, mu):
 
 
 q= -1
-r= 5
-t= 0
+r= 20
+t= -90
 
-bordo= 2.5
+bordo= 10
 sigma= 1
 
 D, mu= trova_coefficienti(q, r, t, bordo, sigma)
 
 
-print(D, mu)
+print("D={:.3}, mu={:.3}".format(D, mu))
 
 
 dM= masse[1] - masse[0]
@@ -580,88 +588,94 @@ if(elimina_negativi=="parabola"):
     indici= indici[0]
 
 
-    inizio=[indici[0]]
-    fine=[]
-
-
-    for i in range( 2, len(indici)):
-
-
-        if ( ( (indici[i] - indici[i-1]) > 1 ) and ( ( indici[i-1] - indici[i-2] ) == 1) ):
-
-            inizio.append(indici[i])
-            fine.append(indici[i-1])
-
-    fine.append(indici[-1])
-
-
-    # stampa degli estremi degli intervalli di massa in cui F(M) è minore di zero
-    print("\nGli intervalli in massa in cui F(M) è minore di zero sono:")
-
-    for i in range(0, len(inizio)):
-
-        print("[{:.3},{:.3}]".format(masse[inizio[i]], masse[fine[i]]))
+    if ( len(indici)>0 ):
 
 
 
-    # sostituzione degli intervalli con parabole
-
-    # ind_min e ind_max sono gli indici degli estremi dell'intervallo in cui la funzione è minor di zero
-
-    def coefficienti (ind_min, ind_max):
-
-        x_0= masse[ind_min-1]
-        x_1= masse[ind_max+1]
-        y_0= F_M_par[ind_min-1]
-        y_1= F_M_par[ind_max+1]
-
-        if ( y_0<y_1 ):
-            b= x_0
-            a= y_1/(x_1 - b)**2
-
-        else:
-            b= x_1
-            a= y_0/(x_0 - b)**2
-
-        print("\na= {:.4}, b={:.4}".format(a, b))
-
-        return a, b
 
 
-    def parabola(x, a, b):
+        inizio=[indici[0]]
+        fine=[]
 
-        return a*(x - b)**2
+
+        for i in range( 2, len(indici)):
 
 
-    for k in range(0, len(inizio)):
+            if ( ( (indici[i] - indici[i-1]) > 1 ) and ( ( indici[i-1] - indici[i-2] ) == 1) ):
+
+                inizio.append(indici[i])
+                fine.append(indici[i-1])
+
+        fine.append(indici[-1])
+
+
+        # stampa degli estremi degli intervalli di massa in cui F(M) è minore di zero
+        print("\nGli intervalli in massa in cui F(M) è minore di zero sono:")
+
+        for i in range(0, len(inizio)):
+
+            print("[{:.3},{:.3}]".format(masse[inizio[i]], masse[fine[i]]))
 
 
 
-        if ( F_M_par[inizio[k] -1 ]<F_M_par[fine[k] + 1] ):
-            ind_sx= inizio[k]
-            ind_dx= fine[k] + shift_da_bordo
+        # sostituzione degli intervalli con parabole
 
-        else:
-            ind_sx= inizio[k] - shift_da_bordo
-            ind_dx= fine[k]
+        # ind_min e ind_max sono gli indici degli estremi dell'intervallo in cui la funzione è minor di zero
+
+        def coefficienti (ind_min, ind_max):
+
+            x_0= masse[ind_min-1]
+            x_1= masse[ind_max+1]
+            y_0= F_M_par[ind_min-1]
+            y_1= F_M_par[ind_max+1]
+
+            if ( y_0<y_1 ):
+                b= x_0
+                a= y_1/(x_1 - b)**2
+
+            else:
+                b= x_1
+                a= y_0/(x_0 - b)**2
+
+            print("\na= {:.4}, b={:.4}".format(a, b))
+
+            return a, b
 
 
-        a, b= coefficienti(ind_sx, ind_dx)
+        def parabola(x, a, b):
 
-        for i in range (ind_sx, ind_dx):
-
-            F_M_par[i]= parabola(masse[i], a, b)
-
-    indici_rest= np.where( F_M_par < 0 )
-
-    for i in indici_rest:
-
-        F_M_par[i]= 0
+            return a*(x - b)**2
 
 
-    F_M= F_M_par
+        for k in range(0, len(inizio)):
 
-    print("\n\n\n")
+
+
+            if ( F_M_par[inizio[k] -1 ]<F_M_par[fine[k] + 1] ):
+                ind_sx= inizio[k]
+                ind_dx= fine[k] + shift_da_bordo
+
+            else:
+                ind_sx= inizio[k] - shift_da_bordo
+                ind_dx= fine[k]
+
+
+            a, b= coefficienti(ind_sx, ind_dx)
+
+            for i in range (ind_sx, ind_dx):
+
+                F_M_par[i]= parabola(masse[i], a, b)
+
+        indici_rest= np.where( F_M_par < 0 )
+
+        for i in indici_rest:
+
+            F_M_par[i]= 0
+
+
+        F_M= F_M_par
+
+        print("\n\n\n")
 
 
 
@@ -722,7 +736,61 @@ dm_f= masse_f_m[1] - masse_f_m[0]
 
 # Scelta dei valori iniziali
 
-f_m_val_iniz=[0.1]*len(masse_f_m)
+if (valori_iniziali=="gaussiana"):
+
+    def param_gauss(masse, funz):
+
+
+        ind_max= np.argmax(funz)
+        massimo= funz[ind_max]
+
+        meta= massimo/2
+
+        for i in range(ind_max, 0, -1):
+
+            if ( funz[i]<=meta ):
+                break
+
+        ind_sx= i
+
+
+        for i in range(ind_max, len(funz)):
+
+            if ( funz[i]<=meta ):
+                break
+
+        ind_dx= i
+
+        sigma= (masse[ind_dx] - masse[ind_sx])/2
+
+        print("La semi larghezza a metà altezza è pari a {:.3}".format(sigma))
+
+        sigma= sigma/np.sqrt(2)
+
+        A= np.sqrt( massimo/(np.sqrt(np.pi)*sigma) )
+
+        mu= masse[ind_max]/2
+
+        return A, mu, sigma
+
+
+
+    def gauss(x, A, mu, sigma):
+
+        return A*np.exp(-( (x-mu)/(np.sqrt(2)*sigma) )**2)
+
+
+
+
+    A_gauss, mu_gauss, sigma_gauss= param_gauss(masse, F_M)
+
+    f_m_val_iniz= gauss(masse_f_m, A_gauss, mu_gauss, sigma_gauss)
+
+
+else:
+    f_m_val_iniz=[0.1]*len(masse_f_m)
+
+
 
 
 
@@ -911,7 +979,8 @@ if ( disegna==True ):
 
 
 
-plt.title("FUNZIONE LOGARITMICA DI MASSA")
+plt.title("FUNZIONE LOGARITMICA DI MASSA\n(q={0}, r={1}, t={2}, bordo={3}, sigma={4})".format(q, r, t, bordo, sigma))
+
 plt.xlabel("Massa [M_sole]")
 plt.ylabel("f(m)")
 
@@ -943,6 +1012,7 @@ plt.title("PRODOTTO DI CONVOLUZIONE DELLA FUNZIONE LOGARITMICA DI MASSA")
 plt.xlabel("Massa [M_sole]")
 plt.ylabel("f(m)*f(m)")
 
+print(masse[0], masse_conv[0])
 plt.xlim( max(masse[0], masse_conv[0]), min(masse[-1], masse_conv[-1]))
 
 

@@ -6,20 +6,25 @@ from sympy import symbols, nsolve, exp
 # valore minimo e massimo della massa rappresentati
 
 minimo= 0
-massimo= 10
+massimo= 20
 
 
 
 # parametri funzione
 
 a= -1
-b= 5
-c= 0
+b= 20
+c= -90
 
-bordo= 2.5
+bordo= 10
 sigma= 1
 
 
+# valori iniziali per la ricerca di D e mu
+
+
+guess_D= 10
+guess_mu= 10
 
 
 # bordo indica il valore di x a destra del quale si ha una gaussiana e a sinistra una parabola, si indicano i coefficienti della parabola (a, b, c) e la deviazione standard della gaussiana (sigma), la costante moltiplicativa e il valor medio vengono fissate imponendo continuita e continuita della derivata prima
@@ -35,7 +40,7 @@ def trova_coefficienti(a, b, c, bordo, sigma):
     f1= D*exp( -(bordo-mu)**2/(2*sigma**2) ) - r1
     f2= D*exp( -(bordo-mu)**2/(2*sigma**2) )*(-(bordo-mu)/sigma**2) - r2
 
-    return nsolve( (f1, f2), (D, mu), (1, 1) )
+    return nsolve( (f1, f2), (D, mu), (guess_D, guess_mu) )
 
 
 

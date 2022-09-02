@@ -7,17 +7,17 @@ import matplotlib.pyplot as plt
 K= 500
 
 mu= 5
-sigma= 1
+sigma= 2
+A= 10
 
 
 
 
 
+def f_m(m, A, mu, sigma):
 
-def f_m(m, mu, sigma):
-
-    return (1/np.sqrt(2*math.pi*sigma**2))*np.exp(-(m-mu)**2/(2*sigma**2))
-
+    #return (1/np.sqrt(2*math.pi*sigma**2))*np.exp(-(m-mu)**2/(2*sigma**2))
+    return A*np.exp(-(m-mu)**2/(2*sigma**2))
 
 
 
@@ -38,7 +38,7 @@ for i in range(0, len(val_conv)):
 
     for j in range(0, len(masse)):
 
-        prod= f_m(masse[j], mu, sigma)*f_m(val_conv[i]-masse[j], mu, sigma)
+        prod= f_m(masse[j], A, mu, sigma)*f_m(val_conv[i]-masse[j], A, mu, sigma)
 
         if( j==0 or j==(K-1) ):
             integrale+= dM*prod/2
@@ -51,7 +51,7 @@ for i in range(0, len(val_conv)):
 
 figure= plt.figure()
 
-plt.plot(masse, f_m(masse, mu, sigma), linestyle="-", marker="", color="red", label="funzione di partenza")
+plt.plot(masse, f_m(masse, A, mu, sigma), linestyle="-", marker="", color="red", label="funzione di partenza")
 plt.plot(val_conv, prod_conv, linestyle="-", marker="", color="blue", label="prodotto di convoluzione")
 
 

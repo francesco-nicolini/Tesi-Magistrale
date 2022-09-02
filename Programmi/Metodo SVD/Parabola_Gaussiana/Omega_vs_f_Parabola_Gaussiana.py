@@ -21,21 +21,26 @@ name_f_m= "f_m_" + str(num) + ".txt"
 # valore minimo e valore massimo considerati per la massa
 
 m_min= 1
-m_max= 10
+m_max= 20
 
 # valori dei parametri della funzione f_m (ossia f(m) )
 
 q= -1
-r= 5
-t= 0
+r= 20
+t= -90
 
-bordo= 2.5
+bordo= 10
 sigma= 1
+
+# valori iniziali per la ricerca di D e mu
+
+guess_D= 10
+guess_mu= 10
 
 # valore minimo e massimo della massa rappresentati per la visualizzazione della distribuzione
 
 minimo= 0
-massimo= 10
+massimo= 20
 
 
 
@@ -103,7 +108,7 @@ def trova_coefficienti(q, r, t, bordo, sigma):
     f1= D*exp( -(bordo-mu)**2/(2*sigma**2) ) - r1
     f2= D*exp( -(bordo-mu)**2/(2*sigma**2) )*(-(bordo-mu)/sigma**2) - r2
 
-    return nsolve( (f1, f2), (D, mu), (6, 2.5) )
+    return nsolve( (f1, f2), (D, mu), (guess_D, guess_mu) )
 
 
 

@@ -89,6 +89,14 @@ cost_prima= 0.00000001
 cost_seconda= 0.01
 
 
+
+
+# se si pone valori_iniziali pari a gaussiana, allora il programma individua la gaussiana che meglio approssima F_M, trova quindi i parametri (ampiezza, media e deviazione standard) della gaussiana il cui prodotto di convoluzione con se stessa restituisce l'altra gaussiana e la utilizza come condizione iniziale. Con qualunque altro valore rende la scelta delle consizioni iniziali personalizzabile
+valori_iniziali="qualsiasi"
+
+
+
+
 # f_m_val_iniz contiene la lista dei valori iniziali per f_m richiesti per procedere con la minimizazione
 '''
 f_m_val_iniz=[1]*( )
@@ -681,7 +689,59 @@ dm_f= masse_f_m[1] - masse_f_m[0]
 
 # Scelta dei valori iniziali
 
-f_m_val_iniz=[0.1]*len(masse_f_m)
+if (valori_iniziali=="gaussiana"):
+
+    def param_gauss(masse, funz):
+
+
+        ind_max= np.argmax(funz)
+        massimo= funz[ind_max]
+
+        meta= massimo/2
+
+        for i in range(ind_max, 0, -1):
+
+            if ( funz[i]<=meta ):
+                break
+
+        ind_sx= i
+
+
+        for i in range(ind_max, len(funz)):
+
+            if ( funz[i]<=meta ):
+                break
+
+        ind_dx= i
+
+        sigma= (masse[ind_dx] - masse[ind_sx])/2
+
+        print("La semi larghezza a metà altezza è pari a {:.3}".format(sigma))
+
+        sigma= sigma/np.sqrt(2)
+
+        A= np.sqrt( massimo/(np.sqrt(np.pi)*sigma) )
+
+        mu= masse[ind_max]/2
+
+        return A, mu, sigma
+
+
+
+    def gauss(x, A, mu, sigma):
+
+        return A*np.exp(-( (x-mu)/(np.sqrt(2)*sigma) )**2)
+
+
+
+
+    A_gauss, mu_gauss, sigma_gauss= param_gauss(masse, F_M)
+
+    f_m_val_iniz= gauss(masse_f_m, A_gauss, mu_gauss, sigma_gauss)
+
+
+else:
+    f_m_val_iniz=[0.1]*len(masse_f_m)
 
 
 
