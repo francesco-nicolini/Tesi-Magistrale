@@ -13,9 +13,9 @@ def f_m(m, mu, sigma):
 
     return (1/np.sqrt(2*math.pi*sigma**2))*np.exp(-(m-mu)**2/(2*sigma**2))
 
-asse= np.linspace(0, 30, K)
+asse= np.linspace(3, 30, K)
 
-mu= 5
+mu= 10
 sigma= 1
 
 a= f_m(asse, mu, sigma)
@@ -37,7 +37,7 @@ asse_b= asse
 dM= asse[1] - asse[0]
 conv= dM*np.convolve(a, b, mode="full")
 
-asse_conv= np.linspace(0, len(conv), len(conv), endpoint=False)*dM
+asse_conv= np.linspace(0, len(conv), len(conv), endpoint=False)*dM + asse_a[0] + asse_b[0]
 
 
 # Identificazione massimo della convoluzione

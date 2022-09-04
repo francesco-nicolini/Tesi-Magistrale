@@ -730,7 +730,7 @@ if( len(F_M)%2!=0 ):
 
 # L'array da minimizzare corrispondente ad f_m deve essere definito in un intervallo in massa che ha come estremi 0 e la meta del valore massimo dell'intervallo in cui è definito F_M, inoltre questa seconda lista di masse si deve costruire con il doppio della sensibilità (la differenza tra valori successivi della massa è pari a metà rispetto alla lista di F_M). In questo modo, la lista del prodotto di convoluizone avrà il doppio della dimensione della lista di F_M, tuttavia mediando elementi successivi si avrà uno stesso numero di componenti, inoltre le due liste saranno definite nello stesso intervallo in massa
 
-masse_f_m= np.linspace(masse[0], masse[-1]/2, len(masse))
+masse_f_m= np.linspace(masse[0]/2, masse[-1]/2, len(masse))
 dm_f= masse_f_m[1] - masse_f_m[0]
 
 

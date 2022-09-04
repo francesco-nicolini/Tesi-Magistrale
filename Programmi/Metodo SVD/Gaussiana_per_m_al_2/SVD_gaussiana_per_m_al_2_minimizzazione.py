@@ -28,7 +28,7 @@ option="read"
 # Path del file se option è uguale a "read", num è il numero di valori della frequenza considerati nel file che si vuole aprire
 num= 500
 
-file_name_omega="C:\\Users\\39366\\Dropbox\\PC\\Documents\\GitHub\\Tesi-Magistrale\\Programmi\\Metodo SVD\\file_txt\\omega_GW_" + str(num) + ".txt"
+file_name_omega= "C:\\Users\\39366\\Dropbox\\PC\\Documents\\GitHub\\Tesi-Magistrale\\Programmi\\Metodo SVD\\Gaussiana_per_m_al_2\\file_txt\\omega_GW_" + str(num) + ".txt"
 
 
 # Se option è pari a "read" ponendo disegna uguale a True verra realizzato il grafico della soluzione esatta nello stesso piano in cui vengono rappresentate le soluzioni trovate minimizzando
@@ -36,7 +36,7 @@ disegna=True
 
 
 # Path del file se disegna è uguale a True
-file_name_f_m="C:\\Users\\39366\\Dropbox\\PC\\Documents\\GitHub\\Tesi-Magistrale\\Programmi\\Metodo SVD\\file_txt\\f_m_" + str(num) + ".txt"
+file_name_f_m="C:\\Users\\39366\\Dropbox\\PC\\Documents\\GitHub\\Tesi-Magistrale\\Programmi\\Metodo SVD\\Gaussiana_per_m_al_2\\file_txt\\f_m_" + str(num) + ".txt"
 
 
 # Estremo superiore e estremo inferiore delle frequenze considerate (da selezionare solo se option è diverso da "read")
@@ -370,14 +370,22 @@ sigma= 1
 
 dM= masse[1] - masse[0]
 
+array=  f_m(masse, mu, sigma)
 
-val_conv= masse
+conv= dM*np.convolve( array, array, mode="full")
 
-conv= np.zeros(len(val_conv))
+print(masse[0])
+
+val_conv= np.linspace(0, len(conv), len(conv), endpoint=False)*dM + 2*masse[0]
+
+'''
+val_conv_1= masse
+
+conv_1= np.zeros(len(val_conv_1))
 
 
 
-for i in range(0, len(val_conv)):
+for i in range(0, len(val_conv_1)):
 
     integrale= 0
 
@@ -391,11 +399,8 @@ for i in range(0, len(val_conv)):
         else:
             integrale+= dM*prod
 
-    conv[i]= integrale
-
-
-
-
+    conv_1[i]= integrale
+'''
 
 
 
@@ -412,8 +417,10 @@ F_M= F_M[mask]
 
 dm= masse[1] - masse[0]
 
+
 masse_sotto= np.linspace( masse[0] - dm - (num_zeri-1)*dm, masse[0] - dm, num=num_zeri)
 masse= np.concatenate((masse_sotto, masse))
+
 
 masse_sopra= np.linspace(masse[-1] + dm, masse[-1] + dm + (num_zeri-1)*dm, num=num_zeri)
 masse= np.concatenate((masse, masse_sopra))
@@ -421,7 +428,10 @@ masse= np.concatenate((masse, masse_sopra))
 
 array_zeri= np.zeros(num_zeri)
 
+
 F_M= np.concatenate((array_zeri, F_M))
+
+
 F_M= np.concatenate((F_M, array_zeri))
 
 
@@ -678,7 +688,7 @@ if( len(F_M)%2!=0 ):
 
 # L'array da minimizzare corrispondente ad f_m deve essere definito in un intervallo in massa che ha come estremi 0 e la meta del valore massimo dell'intervallo in cui è definito F_M, inoltre questa seconda lista di masse si deve costruire con il doppio della sensibilità (la differenza tra valori successivi della massa è pari a metà rispetto alla lista di F_M). In questo modo, la lista del prodotto di convoluizone avrà il doppio della dimensione della lista di F_M, tuttavia mediando elementi successivi si avrà uno stesso numero di componenti, inoltre le due liste saranno definite nello stesso intervallo in massa
 
-masse_f_m= np.linspace(masse[0], masse[-1]/2, len(masse))
+masse_f_m= np.linspace(masse[0]/2, masse[-1]/2, len(masse))
 dm_f= masse_f_m[1] - masse_f_m[0]
 
 

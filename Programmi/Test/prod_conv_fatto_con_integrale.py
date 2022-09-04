@@ -51,9 +51,17 @@ for i in range(0, len(val_conv)):
 
 figure= plt.figure()
 
+plt.title("CALCOLO PRODOTTO DI CONVOLUZIONE")
+
+plt.plot([masse[0], masse[-1]], [0, 0], linestyle="-", marker="", color="black", linewidth= 0.8)
+
 plt.plot(masse, f_m(masse, A, mu, sigma), linestyle="-", marker="", color="red", label="funzione di partenza")
 plt.plot(val_conv, prod_conv, linestyle="-", marker="", color="blue", label="prodotto di convoluzione")
 
+plt.xlabel("masse [U.A.]")
+plt.ylabel("distribuzione [U.A.]")
+
+plt.xlim(masse[0], masse[-1])
 
 plt.legend()
 
