@@ -956,7 +956,7 @@ plt.legend()
 dM= masse_f_m[1] - masse_f_m[0]
 conv= dM*np.convolve(f_m_risult, f_m_risult, mode="full")
 
-masse_conv= np.linspace(0, len(conv), len(conv), endpoint=False)*dM
+masse_conv= np.linspace(0, len(conv), len(conv), endpoint=False)*dM + 2*masse_f_m[0]
 
 
 fig= plt.figure()
