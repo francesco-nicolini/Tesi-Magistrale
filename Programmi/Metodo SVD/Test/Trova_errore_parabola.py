@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 import math
 from scipy.optimize import minimize
 from scipy.optimize import Bounds
-from sympy import symbols, nsolve, exp
 
 
 # OPZIONI VARIE
@@ -14,11 +13,11 @@ from sympy import symbols, nsolve, exp
 K=500
 
 # num_sing contiene il numero di valori singolari che si vogliono considerare per la risoluzione del problema
-num_sing= 8
+num_sing= 27
 
 # Estremo superiore e estremo inferiore delle masse considerate nell'integrale e scarto tra due masse consecutive
 m_min=1
-m_max=30
+m_max=60
 
 
 # Se option è pari a "read" omega_GW è letto da file altrimenti viene creato tramite una funzione
@@ -28,7 +27,7 @@ option="read"
 # Path del file se option è uguale a "read", num è il numero di valori della frequenza considerati nel file che si vuole aprire
 num= 500
 
-file_name_omega="C:\\Users\\39366\\Dropbox\\PC\\Documents\\GitHub\\Tesi-Magistrale\\Programmi\\Metodo SVD\\Parabola_Gaussiana\\file_txt\\omega_GW_" + str(num) + ".txt"
+file_name_omega="C:\\Users\\39366\\Dropbox\\PC\\Documents\\GitHub\\Tesi-Magistrale\\Programmi\\Metodo SVD\\Gaussiana_doppia\\file_txt\\omega_GW_" + str(num) + ".txt"
 
 
 # Se option è pari a "read" ponendo disegna uguale a True verra realizzato il grafico della soluzione esatta nello stesso piano in cui vengono rappresentate le soluzioni trovate minimizzando
@@ -36,7 +35,7 @@ disegna=True
 
 
 # Path del file se disegna è uguale a True
-file_name_f_m="C:\\Users\\39366\\Dropbox\\PC\\Documents\\GitHub\\Tesi-Magistrale\\Programmi\\Metodo SVD\\Parabola_Gaussiana\\file_txt\\f_m_" + str(num) + ".txt"
+file_name_f_m="C:\\Users\\39366\\Dropbox\\PC\\Documents\\GitHub\\Tesi-Magistrale\\Programmi\\Metodo SVD\\Gaussiana_doppia\\file_txt\\f_m_" + str(num) + ".txt"
 
 
 
@@ -47,8 +46,8 @@ freq_max=10**(1)
 
 
 # Estremi della finestra in massa che si considera una volta ottenuta la funzione F(M) (i valori fuori si escludono poiche sono caratterizzati dalla presenza di artefatti)
-mask_min= 15
-mask_max= 25
+mask_min= 0
+mask_max= 60
 
 
 
@@ -58,9 +57,8 @@ epsilon= 1e-15
 
 
 
-
 # Numero di zeri aggiunti a destra e a sinistra dell'array contenente f(M) dopo che è stato selezionato nella sola finestra di cui si è parlato sopra
-num_zeri= 1000
+num_zeri= 100
 
 
 
@@ -92,7 +90,7 @@ shift_da_bordo= 10
 
 
 # L'opzione funzione definisce il tipo di funzione da minimizzare nella determinazione di f_m: se pari a "semplice" è pari semplicemente alla somma dei quadrati delle differenze tra f_m*f_m e F(M); se è pari a "derivata_prima" si aggiunge un termine pari alla somma dei quadrati delle differenze tra elementi successivi di f_m (derivata prima discretizzata) per cost_prima; se è pari a "derivata_seconda" si aggiunge la somma dei quadrati della derivata seconda discretizzata moltiplicata per cost_seconda
-funzione= "semplice"
+funzione= "derivata_seconda"
 cost_prima= 0.00000001
 cost_seconda= 0.01
 
@@ -100,7 +98,7 @@ cost_seconda= 0.01
 
 
 # se si pone valori_iniziali pari a gaussiana, allora il programma individua la gaussiana che meglio approssima F_M, trova quindi i parametri (ampiezza, media e deviazione standard) della gaussiana il cui prodotto di convoluzione con se stessa restituisce l'altra gaussiana e la utilizza come condizione iniziale. Con qualunque altro valore rende la scelta delle consizioni iniziali personalizzabile
-valori_iniziali="gaussiana"
+valori_iniziali="costante"
 
 
 
@@ -209,7 +207,7 @@ else:
 
 
 # Grafico di omega_GW
-
+'''
 fig, ax = plt.subplots()
 
 ax.plot(freq, omega_GW, linestyle="-", color="blue")
@@ -219,7 +217,7 @@ plt.xlabel("f [Hz]")
 plt.ylabel("$\\Omega_{GW}$")
 plt.yscale("log")
 plt.xscale("log")
-
+'''
 
 
 
@@ -308,7 +306,7 @@ def fun_mat(freq, M):
                 a[i][j]= integ(M[j], nu)
 
 
-    dM= (M[-1] - M[0])/(K-1)
+    dM= (M[1] - M[0])
 
     return dM*a
 
@@ -333,30 +331,21 @@ S, v, D= svd(matrix)
 
 print("\n\nLista dei valori singolari:\n")
 
+
 for i in range(0, len(v)):
     print("{:}  {:.3}".format( i, v[i]))
 
 
 
-
-
-
-
-
-
-
-# GRAFICO DEI VALORI SINGOLARI IN FUNZIONE DEL LORO INDICE
+# GRAFICO DEI VALORI SINGOLARI
 plt.figure()
 
 asse_x= np.linspace(1, K+1, K, endpoint=False)
 
-plt.title("Valori Singolari in Funzione del Loro Indice")
+
 plt.plot( asse_x, v, marker="o", color="blue", linestyle="")
 plt.xscale("log")
 plt.yscale("log")
-
-plt.xlabel("i")
-plt.ylabel("valori singolari")
 
 
 
@@ -380,8 +369,8 @@ if(scelta_valori_singolari=="auto"):
         if ( (somma/totale)>=(1-epsilon) ):
 
             num_sing= i
+            print("\n\n\n", somma/totale, "\n\n\n")
             break
-
 
 
 
@@ -422,55 +411,22 @@ F_M= np.dot(F_M, omega_GW)
 
 # definizione di f(m)
 
+def f_m_funzione(m, A_0, mu_0, sigma_0, A_1, mu_1, sigma_1):
 
-def trova_coefficienti(q, r, t, bordo, sigma):
-
-    mu= symbols("mu")
-    D= symbols("D")
-
-    r1= q*bordo**2 + r*bordo + t
-    r2= 2*q*bordo + r
-
-    f1= D*exp( -(bordo-mu)**2/(2*sigma**2) ) - r1
-    f2= D*exp( -(bordo-mu)**2/(2*sigma**2) )*(-(bordo-mu)/sigma**2) - r2
-
-    return nsolve( (f1, f2), (D, mu), (10, 10) )
-
-
-
-
-
-def f_m_funzione(m, bordo, q, r, t, sigma, D, mu):
-
-    D= float(D)
-    mu= float(mu)
-
-    if( m<bordo ):
-
-        risultato= q*m**2+r*m+t
-
-        if ( risultato<0 ):
-            return 0
-
-        else:
-            return risultato
-
+    if ( m<0 ):
+        return 0
 
     else:
-        return D*np.exp( -(m-mu)**2/(2*sigma**2) )
+        return A_0*np.exp(-(m-mu_0)**2/(2*sigma_0**2)) + A_1*np.exp(-(m-mu_1)**2/(2*sigma_1**2))
 
 
-q= -1
-r= 20
-t= -90
+A_0= 10
+mu_0= 5
+sigma_0= 1
 
-bordo= 10
-sigma= 1
-
-D, mu= trova_coefficienti(q, r, t, bordo, sigma)
-
-
-print("D={:.3}, mu={:.3}".format(D, mu))
+A_1= 10
+mu_1= 10
+sigma_1= 1
 
 
 dM= masse[1] - masse[0]
@@ -479,11 +435,9 @@ array= np.zeros(len(masse))
 
 for i in range(0, len(masse)):
 
-    array[i]=  f_m_funzione(masse[i], bordo, q, r, t, sigma, D, mu)
-
+    array[i]=  f_m_funzione(masse[i], A_0, mu_0, sigma_0, A_1, mu_1, sigma_1)
 
 conv= dM*np.convolve( array, array, mode="full")
-
 
 val_conv= np.linspace(0, len(conv), len(conv), endpoint=False)*dM + 2*masse[0]
 
@@ -631,6 +585,9 @@ if(elimina_negativi=="parabola"):
 
     indici= indici[0]
 
+    for i in range(0, len(indici)):
+        print(masse[indici[i]], indici[i])
+
 
     inizio=[]
     fine=[]
@@ -747,7 +704,7 @@ if(elimina_negativi=="parabola"):
 
         F_M_par[i]= 0
 
-    F_M= F_M_par
+    #F_M= F_M_par
 
     print("\n\n\n")
 
@@ -766,341 +723,32 @@ ax.set_title("Soluzione Individuata Considerando {0} Valori Singolari".format(nu
 ax.plot([masse[0],masse[-1]], [0,0], linestyle="-", color="black", marker="", linewidth=0.75, alpha=1)
 
 ax.plot(masse, F_M, linestyle="-", color="blue", marker="", label="Soluzione Ottenuta")
-ax.plot(val_conv, conv, linestyle="-", color="red", marker="", label="Soluzione Esatta")
+ax.plot(val_conv, conv, linestyle="-", color="red", marker="", label="Soluzione Esatta:\n$A_0$={0}, $\\mu_0$= {1}, $\\sigma_0$= {2}\n$A_1$={3}, $\\mu_1$= {4}, $\\sigma_1$= {5}".format( A_0, mu_0, sigma_0, A_1, mu_1, sigma_1))
+
+
+y_min= min(F_M)
+y_max= max(F_M)
+
+
+
+for i in range(0, len(inizio)-1):
+    ax.plot( [masse[inizio[i]], masse[inizio[i]]], [y_min, y_max], linestyle="--", color="blue", linewidth=0.8)
+    ax.plot( [masse[fine[i]], masse[fine[i]]], [y_min, y_max], linestyle="--", color="red", linewidth=0.8)
+    ax.plot( [masse[inizio[i]], masse[fine[i]]], [y_max, y_max], linestyle="--", color="black", linewidth=0.8)
+
+ax.plot( [masse[inizio[-1]], masse[inizio[-1]]], [y_min, y_max], linestyle="--", color="blue", linewidth=0.8, label="inizio")
+ax.plot( [masse[fine[-1]], masse[fine[-1]]], [y_min, y_max], linestyle="--", color="red", linewidth=0.8, label="fine")
+ax.plot( [masse[inizio[-1]], masse[fine[-1]]], [y_max, y_max], linestyle="--", color="black", linewidth=0.8)
+
 
 ax.set_xlabel("M [M_sun]")
 ax.set_ylabel("F(M)")
-ax.set_xlim( max(masse[0], val_conv[0]), min(masse[-1], val_conv[-1]))
-
+#ax.set_xlim( max(masse[0], val_conv[0]), min(masse[-1], val_conv[-1]))
+ax.set_xlim(0, masse[-1]+1)
 
 ax.legend()
 plt.tight_layout()
 
 
-plt.show()
-
-
-
-
-
-
-
-# RICERCA DI f(m) MEDIANTE UN ALGORITMO DI MINIMIZZAZIONE
-
-
-# dal momento che si vuole effettuare la minimizzazione considerando esclusivamente i valori positivi della massa, seleziono esclusivamente i valori di F_M corrispondenti
-
-mask= masse>0
-
-masse= masse[mask]
-F_M= F_M[mask]
-
-if( len(F_M)%2!=0 ):
-
-    masse= masse[:-1]
-    F_M= F_M[:-1]
-
-
-
-# L'array da minimizzare corrispondente ad f_m deve essere definito in un intervallo in massa che ha come estremi 0 e la meta del valore massimo dell'intervallo in cui è definito F_M, inoltre questa seconda lista di masse si deve costruire con il doppio della sensibilità (la differenza tra valori successivi della massa è pari a metà rispetto alla lista di F_M). In questo modo, la lista del prodotto di convoluizone avrà il doppio della dimensione della lista di F_M, tuttavia mediando elementi successivi si avrà uno stesso numero di componenti, inoltre le due liste saranno definite nello stesso intervallo in massa
-
-masse_f_m= np.linspace(masse[0]/2, masse[-1]/2, len(masse))
-dm_f= masse_f_m[1] - masse_f_m[0]
-
-
-# Scelta dei valori iniziali
-
-if (valori_iniziali=="gaussiana"):
-
-    def param_gauss(masse, funz):
-
-
-        ind_max= np.argmax(funz)
-        massimo= funz[ind_max]
-
-        meta= massimo/2
-
-        for i in range(ind_max, 0, -1):
-
-            if ( funz[i]<=meta ):
-                break
-
-        ind_sx= i
-
-
-        for i in range(ind_max, len(funz)):
-
-            if ( funz[i]<=meta ):
-                break
-
-        ind_dx= i
-
-        sigma= (masse[ind_dx] - masse[ind_sx])/2
-
-        print("La semi larghezza a metà altezza è pari a {:.3}".format(sigma))
-
-        sigma= sigma/np.sqrt(2)
-
-        A= np.sqrt( massimo/(np.sqrt(np.pi)*sigma) )
-
-        mu= masse[ind_max]/2
-
-        return A, mu, sigma
-
-
-
-    def gauss(x, A, mu, sigma):
-
-        return A*np.exp(-( (x-mu)/(np.sqrt(2)*sigma) )**2)
-
-
-
-
-    A_gauss, mu_gauss, sigma_gauss= param_gauss(masse, F_M)
-
-    f_m_val_iniz= gauss(masse_f_m, A_gauss, mu_gauss, sigma_gauss)
-
-
-else:
-    f_m_val_iniz=[0.1]*len(masse_f_m)
-
-
-
-
-
-# E' la funzione da minimizzare, f_m contiene le variabili, dm_f contiene la differenza tra due elementi successivi nella lista delle masse corrispondenti a f_m, mentre F_M è la soluzione trovata precedentemente mediante la fattorizzazione SVD che deve essere confrontata con il prodoto di convoluzione di f_m per se stessa
-
-if (funzione=="semplice"):
-
-    def funz_minim(f_m, dm_f, F_M):
-
-        prod= dm_f*np.convolve(f_m, f_m, mode="full")
-
-        prod= np.append(prod, [0])
-
-        prod_media= np.zeros(len(f_m))
-
-        for i in range( 0, len(prod_media)):
-
-            prod_media[i]= ( prod[2*i] + prod[2*i+1] )/2
-
-        somma= 0
-
-        for i in range(0, len(F_M)):
-
-            somma+= ( prod_media[i] - F_M[i] )**2
-
-        return somma
-
-
-
-if (funzione=="derivata_prima"):
-
-    def funz_minim(f_m, dm_f, F_M):
-
-        prod= dm_f*np.convolve(f_m, f_m, mode="full")
-
-        prod= np.append(prod, [0])
-
-        prod_media= np.zeros(len(f_m))
-
-        for i in range( 0, len(prod_media)):
-
-            prod_media[i]= ( prod[2*i] + prod[2*i+1] )/2
-
-        somma= 0
-
-        for i in range(0, len(F_M)):
-
-            somma+= ( prod_media[i] - F_M[i] )**2
-
-
-        deriv= 0
-
-        for i in range(1, len(f_m)):
-
-            deriv+= (f_m[i] - f_m[i-1])**2
-
-        return somma + cost_prima*deriv
-
-
-
-if (funzione=="derivata_seconda"):
-
-    def funz_minim(f_m, dm_f, F_M):
-
-        prod= dm_f*np.convolve(f_m, f_m, mode="full")
-
-        prod= np.append(prod, [0])
-
-        prod_media= np.zeros(len(f_m))
-
-        for i in range( 0, len(prod_media)):
-
-            prod_media[i]= ( prod[2*i] + prod[2*i+1] )/2
-
-        somma= 0
-
-        for i in range(0, len(F_M)):
-
-            somma+= ( prod_media[i] - F_M[i] )**2
-
-
-        deriv= 0
-
-        for i in range(1, len(f_m) -1):
-
-            deriv+= (f_m[i+1] - 2*f_m[i] + f_m[i-1])**2
-
-        return somma + cost_seconda*deriv
-
-
-
-
-
-
-
-
-
-
-# Minimizzazione
-
-# imposizione dei limiti per le diverse varuabili (devono essere tutte maggiori di zero)
-
-minimi=[0]*len(f_m_val_iniz)
-massimi=[np.inf]*len(f_m_val_iniz)
-
-
-bounds= Bounds(minimi, massimi)
-
-risultati= minimize(funz_minim, f_m_val_iniz, args=(dm_f, F_M), method="TNC", bounds= bounds, options={'disp': True})
-
-f_m_risult= risultati.x
-
-
-
-
-
-
-
-
-
-
-# SMUSSAMENTO TRAMITE LA TECNICA DELLA MEDIA MOBILE (DIVIDO IN FINESTRE CHE CONDIVIDONO DIVERSI PUNTI)
-
-# creo una finestra e calcolo media, la finestra successiva si crea partendo dalla precedente facendo scorrere di un valore a destra, quindi vengono condivisi un numero di punti pari alla lunghezza della finestra meno uno. La dimensione finale è pari a alla dimensione iniziale meno la lunghezza della finestra
-
-
-
-if (opzione_smooth=="media_mobile_1"):
-
-    masse_f_m_medie= np.zeros( len(F_M) - lung_sottoin )
-    f_m_medie= np.zeros( len(F_M) - lung_sottoin )
-
-
-    for i in range( int(lung_sottoin/2), len(f_m_risult) - int(lung_sottoin/2)):
-
-        sum= 0
-
-        for j in range( -int(lung_sottoin/2), int(lung_sottoin/2)):
-
-            sum+= f_m_risult[i + j]
-
-        media= sum/lung_sottoin
-
-        masse_f_m_medie[i-int(lung_sottoin/2)]= masse_f_m[i]
-        f_m_medie[i-int(lung_sottoin/2)]= media
-
-    '''
-    masse_f_m= masse_f_m_medie
-    f_m_risult= f_m_medie
-    '''
-
-
-
-
-
-
-
-
-
-# GRAFICO DEI RISULTATI OTTENUTI
-
-fig= plt.figure()
-
-
-plt.plot(masse_f_m, f_m_risult, linestyle="-", marker="", color="blue", label="Soluzione Individuata")
-
-if (opzione_smooth=="media_mobile_1"):
-
-    stringa="Soluzione individuata con\nmedia mobile con intervalli\ndi lunghezza {0}".format(lung_sottoin)
-    plt.plot(masse_f_m_medie, f_m_medie, linestyle="-", marker="", color="red", label=stringa)
-
-
-if ( disegna==True ):
-
-    f_m_esatto= np.zeros(len(masse_f_m))
-
-    for i in range(0, len(f_m_esatto)):
-
-        f_m_esatto[i]= f_m_funzione(masse_f_m[i],  bordo, q, r, t, sigma, D, mu)
-
-
-    plt.plot(masse_f_m, f_m_esatto, linestyle="-", color="orange", label="Soluzione Esatta")
-
-
-
-
-
-
-plt.title("FUNZIONE LOGARITMICA DI MASSA\n(q={0}, r={1}, t={2}, bordo={3}, sigma={4})".format(q, r, t, bordo, sigma))
-
-plt.xlabel("Massa [M_sole]")
-plt.ylabel("f(m)")
-
-plt.xlim( masse_f_m[0], masse_f_m[-1])
-plt.legend()
-
-
-
-
-
-
-
-
-
-# CONFRONTO TRA IL PRODOTTO DI CONVOLUZIONE DI f_m_risult CON SE STESSO E F_M
-
-dM= masse_f_m[1] - masse_f_m[0]
-conv= dM*np.convolve(f_m_risult, f_m_risult, mode="full")
-
-masse_conv= np.linspace(0, len(conv), len(conv), endpoint=False)*dM + 2*masse_f_m[0]
-
-
-fig= plt.figure()
-
-plt.plot(masse_conv, conv, linestyle="-", color="blue", label="f(m)_m*f(m)_m")
-plt.plot(masse, F_M, linestyle="-", color="orange", marker="", label="F(M)")
-
-plt.title("PRODOTTO DI CONVOLUZIONE DELLA FUNZIONE LOGARITMICA DI MASSA")
-plt.xlabel("Massa [M_sole]")
-plt.ylabel("f(m)*f(m)")
-
-print(masse[0], masse_conv[0])
-plt.xlim( max(masse[0], masse_conv[0]), min(masse[-1], masse_conv[-1]))
-
-
-
-
-
-
-
-
-
-
-
-plt.legend()
-
-plt.tight_layout()
 plt.show()
 

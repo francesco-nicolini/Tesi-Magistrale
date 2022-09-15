@@ -54,6 +54,13 @@ mask_max= 20
 
 
 
+# Se scelta_valori_singolari è posta pari ad "auto", allora il numero dei valori singolari considerato per la determinazione della soluzione viene scelto imponendo che il rappporto tra la somma di questi ultimi e la somma di tutti sia pari a 1-epsilon con epsilon scelto. Se scelta_valori_singolari assume un qualsiasi altro valore allora il numero di valori singolari considerato è quello fornito.
+scelta_valori_singolari="auto"
+epsilon= 1e-15
+
+
+
+
 # Numero di zeri aggiunti a destra e a sinistra dell'array contenente f(M) dopo che è stato selezionato nella sola finestra di cui si è parlato sopra
 num_zeri= 100
 
@@ -319,6 +326,53 @@ for i in range(0, len(v)):
 
 
 
+# GRAFICO DEI VALORI SINGOLARI IN FUNZIONE DEL LORO INDICE
+plt.figure()
+
+asse_x= np.linspace(1, K+1, K, endpoint=False)
+
+plt.title("Valori Singolari in Funzione del Loro Indice")
+plt.plot( asse_x, v, marker="o", color="blue", linestyle="")
+plt.xscale("log")
+plt.yscale("log")
+
+plt.xlabel("i")
+plt.ylabel("valori singolari")
+
+
+
+
+
+
+
+
+
+# DETERMINAZIONE DEL NUMERO DI VALORI SINGOLARI
+
+if(scelta_valori_singolari=="auto"):
+
+    somma= 0
+    totale= v.sum()
+
+    for i in range(0, len(v)):
+
+        somma+= v[i]
+
+        if ( (somma/totale)>=(1-epsilon) ):
+
+            num_sing= i
+            break
+
+
+
+
+
+
+
+
+
+
+
 # OTTENIEMTO DELLA SOLUZIONE
 
 v_i= 1/v
@@ -508,25 +562,62 @@ if(elimina_negativi=="parabola"):
     indici= indici[0]
 
 
-    inizio=[indici[0]]
+    inizio=[]
     fine=[]
 
+    if ( (indici[1]-indici[0])>1 ):
 
-    for i in range( 2, len(indici)):
+        # il primo indice definisce un intervallo con un solo punto
+        inizio.append(indici[0])
+        fine.append(indici[0])
+
+    else:
+
+        inizio.append(indici[0])
 
 
-        if ( ( (indici[i] - indici[i-1]) > 1 ) and ( ( indici[i-1] - indici[i-2] ) == 1) ):
+    for i in range( 1, len(indici)-1):
+
+
+        if ( ((indici[i] - indici[i-1])>1) and ((indici[i+1] - indici[i])>1) ):
+
+            # l'entirvallo è costituito da un solo punto
 
             inizio.append(indici[i])
-            fine.append(indici[i-1])
+            fine.append(indici[i])
 
-    fine.append(indici[-1])
+        elif ( ((indici[i] - indici[i-1])>1) and ((indici[i+1] - indici[i]) == 1) ):
 
+            # questo indice segna l'inizio di un intervallo
+
+            inizio.append(indici[i])
+
+        elif ( ((indici[i+1] - indici[i])>1) and ((indici[i] - indici[i-1])==1) ):
+
+            # questo indice segna la fine di un intervallo
+
+            fine.append(indici[i])
+
+
+
+
+    if ( (indici[-1]-indici[-2])>1 ):
+
+        # l'ultimo indice definisce un intervallo con un solo punto
+        inizio.append(indici[-1])
+        fine.append(indici[-1])
+
+    else:
+
+        fine.append(indici[-1])
+
+
+    print(len(inizio), len(fine))
 
     # stampa degli estremi degli intervalli di massa in cui F(M) è minore di zero
     print("\nGli intervalli in massa in cui F(M) è minore di zero sono:")
 
-    for i in range(0, len(inizio)):
+    for i in range(0, len(fine)):
 
         print("[{:.3},{:.3}]".format(masse[inizio[i]], masse[fine[i]]))
 
@@ -561,7 +652,7 @@ if(elimina_negativi=="parabola"):
         return a*(x - b)**2
 
 
-    for k in range(0, len(inizio)):
+    for k in range(0, len(fine)):
 
 
 
@@ -585,7 +676,6 @@ if(elimina_negativi=="parabola"):
     for i in indici_rest:
 
         F_M_par[i]= 0
-
 
     F_M= F_M_par
 

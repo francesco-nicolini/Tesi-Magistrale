@@ -51,6 +51,13 @@ mask_max= 25.15
 
 
 
+# Se scelta_valori_singolari è posta pari ad "auto", allora il numero dei valori singolari considerato per la determinazione della soluzione viene scelto imponendo che il rappporto tra la somma di questi ultimi e la somma di tutti sia pari a 1-epsilon con epsilon scelto. Se scelta_valori_singolari assume un qualsiasi altro valore allora il numero di valori singolari considerato è quello fornito.
+scelta_valori_singolari="auto"
+epsilon= 1e-15
+
+
+
+
 # Numero di zeri aggiunti a destra e a sinistra dell'array contenente f(M) dopo che è stato selezionato nella sola finestra di cui si è parlato sopra
 num_zeri= 200
 
@@ -87,6 +94,15 @@ shift_da_bordo= 5
 funzione= "semplice"
 cost_prima= 0.00000001
 cost_seconda= 0.01
+
+
+
+
+# se si pone valori_iniziali pari a gaussiana, allora il programma individua la gaussiana che meglio approssima F_M, trova quindi i parametri (ampiezza, media e deviazione standard) della gaussiana il cui prodotto di convoluzione con se stessa restituisce l'altra gaussiana e la utilizza come condizione iniziale. Con qualunque altro valore rende la scelta delle consizioni iniziali personalizzabile
+valori_iniziali="gaussiana"
+
+
+
 
 
 # f_m_val_iniz contiene la lista dei valori iniziali per f_m richiesti per procedere con la minimizazione
@@ -329,6 +345,53 @@ for i in range(0, len(v)):
 
 
 
+# GRAFICO DEI VALORI SINGOLARI IN FUNZIONE DEL LORO INDICE
+plt.figure()
+
+asse_x= np.linspace(1, K+1, K, endpoint=False)
+
+plt.title("Valori Singolari in Funzione del Loro Indice")
+plt.plot( asse_x, v, marker="o", color="blue", linestyle="")
+plt.xscale("log")
+plt.yscale("log")
+
+plt.xlabel("i")
+plt.ylabel("valori singolari")
+
+
+
+
+
+
+
+
+
+# DETERMINAZIONE DEL NUMERO DI VALORI SINGOLARI
+
+if(scelta_valori_singolari=="auto"):
+
+    somma= 0
+    totale= v.sum()
+
+    for i in range(0, len(v)):
+
+        somma+= v[i]
+
+        if ( (somma/totale)>=(1-epsilon) ):
+
+            num_sing= i
+            break
+
+
+
+
+
+
+
+
+
+
+
 # OTTENIEMTO DELLA SOLUZIONE
 
 v_i= 1/v
@@ -374,7 +437,6 @@ array=  f_m(masse, mu, sigma)
 
 conv= dM*np.convolve( array, array, mode="full")
 
-print(masse[0])
 
 val_conv= np.linspace(0, len(conv), len(conv), endpoint=False)*dM + 2*masse[0]
 
@@ -550,25 +612,62 @@ if(elimina_negativi=="parabola"):
     indici= indici[0]
 
 
-    inizio=[indici[0]]
+    inizio=[]
     fine=[]
 
+    if ( (indici[1]-indici[0])>1 ):
 
-    for i in range( 2, len(indici)):
+        # il primo indice definisce un intervallo con un solo punto
+        inizio.append(indici[0])
+        fine.append(indici[0])
+
+    else:
+
+        inizio.append(indici[0])
 
 
-        if ( ( (indici[i] - indici[i-1]) > 1 ) and ( ( indici[i-1] - indici[i-2] ) == 1) ):
+    for i in range( 1, len(indici)-1):
+
+
+        if ( ((indici[i] - indici[i-1])>1) and ((indici[i+1] - indici[i])>1) ):
+
+            # l'entirvallo è costituito da un solo punto
 
             inizio.append(indici[i])
-            fine.append(indici[i-1])
+            fine.append(indici[i])
 
-    fine.append(indici[-1])
+        elif ( ((indici[i] - indici[i-1])>1) and ((indici[i+1] - indici[i]) == 1) ):
 
+            # questo indice segna l'inizio di un intervallo
+
+            inizio.append(indici[i])
+
+        elif ( ((indici[i+1] - indici[i])>1) and ((indici[i] - indici[i-1])==1) ):
+
+            # questo indice segna la fine di un intervallo
+
+            fine.append(indici[i])
+
+
+
+
+    if ( (indici[-1]-indici[-2])>1 ):
+
+        # l'ultimo indice definisce un intervallo con un solo punto
+        inizio.append(indici[-1])
+        fine.append(indici[-1])
+
+    else:
+
+        fine.append(indici[-1])
+
+
+    print(len(inizio), len(fine))
 
     # stampa degli estremi degli intervalli di massa in cui F(M) è minore di zero
     print("\nGli intervalli in massa in cui F(M) è minore di zero sono:")
 
-    for i in range(0, len(inizio)):
+    for i in range(0, len(fine)):
 
         print("[{:.3},{:.3}]".format(masse[inizio[i]], masse[fine[i]]))
 
@@ -603,7 +702,7 @@ if(elimina_negativi=="parabola"):
         return a*(x - b)**2
 
 
-    for k in range(0, len(inizio)):
+    for k in range(0, len(fine)):
 
 
 
@@ -627,7 +726,6 @@ if(elimina_negativi=="parabola"):
     for i in indici_rest:
 
         F_M_par[i]= 0
-
 
     F_M= F_M_par
 
@@ -738,6 +836,112 @@ f_m_val_iniz= np.ones(len(masse_f_m))
 for i in range(0, len(masse_f_m)):
 
     f_m_val_iniz[i]=  triangolo(masse_f_m[i], x_max, y_max, x_inf, x_sup)
+
+
+
+
+
+# Scelta dei valori iniziali
+
+if (valori_iniziali=="gaussiana"):
+
+    def param_gauss(masse, funz):
+
+
+        ind_max= np.argmax(funz)
+        massimo= funz[ind_max]
+
+        meta= massimo/2
+
+        for i in range(ind_max, 0, -1):
+
+            if ( funz[i]<=meta ):
+                break
+
+        ind_sx= i
+
+
+        for i in range(ind_max, len(funz)):
+
+            if ( funz[i]<=meta ):
+                break
+
+        ind_dx= i
+
+        sigma= (masse[ind_dx] - masse[ind_sx])/2
+
+        print("La semi larghezza a metà altezza è pari a {:.3}".format(sigma))
+
+        sigma= sigma/np.sqrt(2)
+
+        A= np.sqrt( massimo/(np.sqrt(np.pi)*sigma) )
+
+        mu= masse[ind_max]/2
+
+        return A, mu, sigma
+
+
+
+    def gauss(x, A, mu, sigma):
+
+        return A*np.exp(-( (x-mu)/(np.sqrt(2)*sigma) )**2)
+
+
+
+
+    A_gauss, mu_gauss, sigma_gauss= param_gauss(masse, F_M)
+
+    f_m_val_iniz= gauss(masse_f_m, A_gauss, mu_gauss, sigma_gauss)
+    '''
+    f_m_val_iniz= gauss(masse_f_m, 40, mu_gauss, sigma_gauss)
+    '''
+
+else:
+
+    # x_max e y_max indicano l'ascissa e l'ordinata del massimo
+    x_max= 10
+    y_max= 40
+
+    # x_inf e x_sup indicano l'estremo superiore e l'estremo inferiore del supporto
+    x_inf= 8
+    x_sup= 124
+
+
+
+    def triangolo(m, x_max, y_max, x_inf, x_sup):
+
+
+        if ( x_inf<x_max<x_sup):
+
+            if( m<x_inf or m>x_sup ):
+                return 0
+
+            elif ( x_inf<=m<=x_max ):
+
+                incl= y_max/(x_max - x_inf)
+                q= -incl*x_inf
+
+                return incl*m + q
+
+            elif ( x_max<m<=x_sup ):
+
+                incl= y_max/(x_max - x_sup)
+                q= -incl*x_sup
+
+                return incl*m + q
+
+
+        else:
+            print("Errore nella scelta dei parametri")
+            return
+
+
+
+    f_m_val_iniz= np.ones(len(masse_f_m))
+
+    for i in range(0, len(masse_f_m)):
+
+        f_m_val_iniz[i]=  triangolo(masse_f_m[i], x_max, y_max, x_inf, x_sup)
 
 
 
