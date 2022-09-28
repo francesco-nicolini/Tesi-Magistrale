@@ -11,7 +11,7 @@ from scipy.optimize import dual_annealing
 
 
 # K contiene il numero di valori della funzione che si vogliono calcolare (ossia il numero delle variabili)
-K=500
+K=1000
 
 # num_sing contiene il numero di valori singolari che si vogliono considerare per la risoluzione del problema
 num_sing= 25
@@ -26,7 +26,7 @@ option="read"
 
 
 # Path del file se option è uguale a "read", num è il numero di valori della frequenza considerati nel file che si vuole aprire
-num= 500
+num= 1000
 
 file_name_omega="C:\\Users\\39366\\Dropbox\\PC\\Documents\\GitHub\\Tesi-Magistrale\\Programmi\\Metodo SVD\\Gaussiana_doppia\\file_txt\\omega_GW_" + str(num) + ".txt"
 
@@ -99,7 +99,7 @@ cost_seconda= 0.01
 
 
 # se si pone valori_iniziali pari a gaussiana, allora il programma individua la gaussiana che meglio approssima F_M, trova quindi i parametri (ampiezza, media e deviazione standard) della gaussiana il cui prodotto di convoluzione con se stessa restituisce l'altra gaussiana e la utilizza come condizione iniziale. Con qualunque altro valore rende la scelta delle consizioni iniziali personalizzabile
-valori_iniziali="costante"
+valori_iniziali="gaussiana"
 
 
 
@@ -219,6 +219,9 @@ plt.ylabel("$\\Omega_{GW}$")
 plt.yscale("log")
 plt.xscale("log")
 
+import os
+
+print(os.getcwd())
 
 
 
@@ -827,7 +830,7 @@ if (valori_iniziali=="gaussiana"):
 
 
 else:
-
+    '''
     def rettangoli(m, mu_0, mu_1, sigma, ampiezza):
 
         if ( mu_0-sigma<m<mu_0+sigma ):
@@ -846,6 +849,16 @@ else:
         f_m_val_iniz[i]= rettangoli(masse_f_m[i], mu_0=5, mu_1=10, sigma=1, ampiezza=10)
 
     f_m_val_iniz=[0.1]*len(masse_f_m)
+    '''
+
+    f_m_val_iniz= np.zeros(len(masse_f_m))
+
+    for i in range(0, len(f_m_val_iniz)):
+
+        f_m_val_iniz[i]= f_m_funzione(masse_f_m[i], A_0, mu_0, sigma_0, A_1, mu_1, sigma_1)
+
+
+
 
 
 
@@ -947,7 +960,7 @@ if (funzione=="derivata_seconda"):
 # Minimizzazione
 
 # imposizione dei limiti per le diverse varuabili (devono essere tutte maggiori di zero)
-'''
+
 minimi=[0]*len(f_m_val_iniz)
 massimi=[np.inf]*len(f_m_val_iniz)
 
@@ -955,9 +968,9 @@ massimi=[np.inf]*len(f_m_val_iniz)
 bounds= Bounds(minimi, massimi)
 
 risultati= minimize(funz_minim, f_m_val_iniz, args=(dm_f, F_M), method="TNC", bounds= bounds, options={'disp': True})
+
+
 '''
-
-
 bounds=[]
 
 for i in range(0, len(f_m_val_iniz)):
@@ -969,7 +982,7 @@ for i in range(0, len(f_m_val_iniz)):
 
 risultati= dual_annealing(funz_minim, args=(dm_f, F_M),  bounds= bounds)
 
-
+'''
 
 f_m_risult= risultati.x
 
