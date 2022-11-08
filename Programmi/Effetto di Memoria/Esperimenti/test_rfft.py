@@ -2,6 +2,28 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
+
+
+
+
+
+# COSTANTI DEL PROGRAMMA
+
+A= 1
+mu= 0
+sigma= 1/5
+
+dt=0.1
+
+
+
+
+
+
+
+# DEFINIZIONE FUNZIONI
+
+# Gaussiana
 def gauss(x, A, mu, sigma):
 
     return A*np.exp( -(x - mu)**(2)/(2*sigma**(2)) )
@@ -9,9 +31,7 @@ def gauss(x, A, mu, sigma):
 
 
 
-
-
-
+# Questa funzione inverte l'ordine di alcuni elementi dell'array in ingresso, nello specifico pone per primi quegli elementi che si trovano oltre la metà. Ciò viene fatto al fine di rendere più bella la rappresentazione grafica degli array ottenuti mediante l'utilizzo di fft, evitando che vengano disegnati dei punti viccini ma non congiunti e punti distanti ma congiunti
 def array_graf(a):
 
     n= len(a)
@@ -35,17 +55,8 @@ def array_graf(a):
 
 
 
-A= 1
-mu= 0
-sigma= 1/5
 
-dt=0.1
-
-
-
-
-
-
+# COSTRUZIONE DELL'ARRAY DEI TEMPI
 
 # per rendere la fft più efficiente possibile conviene scegliere una potenza di 2 come dimenzione n dell'array, inoltre si deve costruire l'aarray delle x in modo che il primo valore contenuto sia lo zeros, il secondo sia pari a meno l'ultimo, il terzo sia pari a meno il penultimo e così via. Così facendo avanza un vlore, ossia l' (n/2 +1)-esimo, che non è pari al negativo di nessun altro valore e che da quello che ho visto viene solitamente posto negativo
 
@@ -65,6 +76,9 @@ for i in range(1, int(len(t)/2) ):
 
 
 
+
+# CREAZIONE DEL SEGNALE NEL DOMINIO DEL TEMPO
+
 segn= gauss(t, A, mu, sigma)
 
 n= len(segn)
@@ -73,6 +87,9 @@ n= len(segn)
 
 
 
+
+
+# GRAFICO DEL SEGNALE NEL DOMINIO DEL TEMPO
 
 plt.figure()
 
@@ -95,6 +112,10 @@ plt.ylabel("segnale [U.A.]")
 
 
 
+
+
+# CALCOLO DEL SEGNALE TRASFORMATO MEDIANTE RFFT
+
 tras_rfft= np.fft.rfft(segn)
 print("La lunghezza dell'array trasformato è {0}, mentre quella dell'array di partenza è {1}".format(len(tras_rfft), len(segn)) )
 
@@ -109,12 +130,20 @@ f_rfft= np.linspace(f_rfft_min, f_rfft_max, int(n/2 + 1))
 
 
 
+
+
+# CALCOLO DEL SEGNALE TRASFORMATO MEDIANTE FFT
+
 tras_fft= np.fft.fft(segn)
 f_fft= np.fft.fftfreq(n, dt)
 
 
 
 
+
+
+
+# GRAFICO CON IL CONFRONTO DEL SEGNALE NEL DOMINIO DELLE FREQUENZE OTTENUTO CON FFT E QUELLO OTTEUTO CON RFFT
 
 plt.figure()
 

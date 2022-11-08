@@ -4,6 +4,11 @@ from scipy.integrate import quad
 from scipy.special import hankel1
 
 
+
+
+
+
+
 # VARIABII PROGRAMMA
 
 
@@ -11,8 +16,20 @@ from scipy.special import hankel1
 file_U_xi=""
 
 # path e nome dei file in cui salvare lo spettro in potenza
-path_P=""
-file_name_H_11="H_11"
+path_DP=
+file_name_DP=
+
+# N è la dimenzione dell'array dei tempi. E' conveniente scegliere per questa variabile una potenza di 2, così da rendere più efficiente il calcolo della fft
+N= 2048
+
+# n è la dimenzione dell'array delle frequenze. Poichè si utilizza la funzione np.fft.rfft(), l'array in uscita da questa ha dimenzione N/2 + 1 e, per N pari, la sua prima componente corrisponde alla frequenza nulla, mentre l'ultima alla frequenza di Nyquist, pari a metà della frequenza di campionamento. Vengono inoltre calcolati solo i valori corrisponndenti a frequenze positive, in quanto, essendo presente in ingresso un'array reale, la trasformata risulta essere hermitiana.
+n= N/2 + 1
+
+# freq_min è la frequenza minima considerata
+freq_min= 0
+
+# freq_max è la frequenza massima considerata
+freq_max= 10**(3)
 
 
 
@@ -73,13 +90,12 @@ mu= m_1*m_2/M
 alpha= G*M*mu
 
 # A è una costante che compare nelle componenti del quadrupolo e nelle unita di misura scelta si misura in secondi
-A=np.sqrt(mu*a**(3)/alpha)
+A= np.sqrt(mu*a**(3)/alpha)
 
 # cost è una costante che compare nella formula per lo spettro in potenza
-cost= -( 4*G**(2) )/( 1260*np.pi**(2)*c**(10) )
+cost= -( 2*G**(2) )/( 315*np.pi**(2)*c**(10) )
 
 # nu_0 è una costante che compare nelle trasformate di Fourier delle componenti del quadrupolo
-
 nu_0 = np.sqrt( a**(3)/(G*M) )
 
 
@@ -89,6 +105,49 @@ nu_0 = np.sqrt( a**(3)/(G*M) )
 
 
 # DEFINIZIONE DELLE FUNZIONI DA UTILIZZARE
+
+
+# FUNZIONI PER PASSARE DAL TEMPO A xi
+
+# FUNZIONE DA INVERTIRE
+
+def t_xi(xi, t):
+
+    return A*(e*np.sinh(xi) - xi) - t
+
+
+
+
+# INVERSIONE DELL'EQUAZIONE
+
+
+def inver_t_xi(t):
+
+    if(t < 0):
+        initial_guess = -np.log(-2*t/A)
+
+    elif (t==0):
+        initial_guess = 0
+
+    else:
+        initial_guess= np.log(2*t/A)
+
+
+    xi_soluz= fsolve(t_xi, initial_guess, args=(t))
+
+    return xi_soluz[0]
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # DERIVATE DI xi
@@ -195,7 +254,76 @@ def M_33_fourier(f):
 
 # DEFINIZIONE DELL'ARRAY DELLE FREQUENZE CHE SI VOGLIONO STUDIARE
 
-freq=
+freq= np.linspace(freq_min, freq_max, n)
+
+df= freq[1] - freq[0]
+
+
+
+
+
+
+
+# COSTRUZIONE DELL'ARRAY DEI TEMPI CORRISPONEDENTI ALL'ARRAY freq
+
+# per rendere la fft più efficiente possibile conviene scegliere una potenza di 2 come dimenzione N dell'array, inoltre si deve costruire l'array delle ascisse in modo che il primo valore contenuto sia lo zero, il secondo sia pari a meno l'ultimo, il terzo sia pari a meno il penultimo e così via. Così facendo avanza un valore, ossia l' (N/2 +1)-esimo, che non è pari al negativo di nessun altro che viene solitamente posto negativo
+
+dt= 1/(N*df)
+
+time= np.zeros(N)
+
+time[0]= 0
+
+time[int(N/2)]= -(N/2)*dt
+
+for i in range(1, int(N/2)):
+
+    time[i]= dt*i
+    time[N-i]= -t[i]
+
+
+
+
+
+
+
+# CALCOLO DEGLI xi CORRISPONEDENTI AI TEMPI E RAPPRESENTAZIONE GRAFICA
+
+
+xi= np.zeros(len(time))
+
+for i in range(0, len(time)):
+
+xi[i]= inver_t_xi(time[i])
+
+
+# grafico di xi in funzione di t
+
+plt.figure()
+
+plt.title("$\\xi$ in funzione del tempo")
+
+plt.plot(time, xi, linestyle="-", marker="", color="blue")
+plt.plot([time[0], time[-1]], [0, 0], linestyle="-", marker="", color="black", linewidth= 0.8)
+
+plt.xlabel("t [s]")
+plt.ylabel("$\\xi$")
+
+plt.show()
+
+
+
+
+
+
+
+# CALCOLO DELLE ANTITRASORMATE
+
+
+antitras_11= ( M_11_3(xi) )**2
+antitras_12= ( M_12_3(xi) )**2
+antitras_22= ( M_22_3(xi) )**2
+antitras_33= ( M_33_3(xi) )**2
 
 
 
@@ -205,27 +333,88 @@ freq=
 
 # CALCOLO DELLE TRASFORMATE DI FOURIER DEI QUADRATI DELLE DERIVATE CUBICHE DELLE COMPONENTI DEL QUADRUPOLO
 
-# costruzione dell'array dei tempi corrispondente a freq
-
-n= freq.size
-df= freq[1] - freq[0]
-time= np.fft.fftfreq(n, df)
-time= np.fft.fftshift(time)
-
-xi= inver_t_xi(time)
 
 # trasformata del quadrato della derivata cubica della componenti 11 del quadrupolo
+tras_11= np.fft.rfft(antitras_11)
 
-antitras_11= ( M_11_3(xi) )**2
+# trasformata del quadrato della derivata cubica della componenti 12 del quadrupolo
+tras_12= np.fft.rfft(antitras_12)
 
-# FORSE E' MEGLIO RFFT, FFT DA UN ARRAY LUNGO COME L'ARRAY DI INPUT, PER RFFT INVECE E' DIVERSO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-# uso ifft per come è definita la trasformata discreta di forier in numpy
+# trasformata del quadrato della derivata cubica della componenti 22 del quadrupolo
+tras_22= np.fft.rfft(antitras_22)
 
-tras_11= np.fft.ifft(antitras_11)
+# trasformata del quadrato della derivata cubica della componenti 33 del quadrupolo
+tras_33= np.fft.rfft(antitras_33)
+
+
+
+
+
+
+
+# CALCOLO DELLA CORREZIONE ALLO SPETTRO IN FREQUENZA
+
+DP= np.zeros(n, dtype=complex)
+
+for i in range(0, n):
+
+    DP[i]= tras_11[i]*M_11_fourier(-freq[i]) + tras_22[i]*M_22_fourier(-freq[i]) + tras_33[i]*M_33_fourier(-freq[i]) + tras_12[i]*( M_11_fourier(-freq[i]) + M_22_fourier(-freq[i]) )
+
+    DP[i]= cost*(-1j*freq[i]**(3))*DP[i]
+
+
+# converzione in Joule diviso Hertz
+
+DP= (M_s*UA**2)*DP
+
+
+
+
+
+
+
+# GRAFICO DELLA CORREZIONE ALLO SPETTRO IN FREQUNZA
+
+fig=plt.figure()
+
+plt.title("Correzione allo spettro di potenza")
+
+
+plt.plot(freq, DP, marker="", linestyle="-", color="blue")
+plt.plot( [freq[0], freq[-1]], [0, 0], marker="", linestyle="-", color="black", linewidth=0.8)
+
+
+plt.xlim(freq[0], freq[-1])
+
+plt.xlabel("f [Hz]")
+plt.ylabel("$\\Delta$P [J/Hz]")
+
+
+
+
+
+
+
+# SALVATAGGIO SU FILE
+
+file_name= path_DP + "\\" + file_name_DP
+
+file= open(file_name, "w")
+
+np.savetxt(file, np.c_[freq, DP])
+file.close()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
