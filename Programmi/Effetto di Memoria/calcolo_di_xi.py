@@ -6,11 +6,16 @@ from scipy.optimize import fsolve
 
 # VARIABILI PROGRAMMA
 
+
 window= 1e20
 N= 1e4
+path=
+file_name=
 
 
-# PARAMETRI FISICI DA FISSARE
+
+
+# PARAMETRI FISICI
 
 
 # e è l'eccentricità
@@ -93,12 +98,12 @@ def invert(u):
 
 # DETERMINAZIONE DELLE xi
 
-u= np.linspace(-window, window, int(N))
-xi= np.zeros(len(u))
+U= np.linspace(-window, window, int(N))
+xi= np.zeros(len(U))
 
 
-for i in range(0, len(u)):
-    xi[i]= invert(u[i])
+for i in range(0, len(U)):
+    xi[i]= invert(U[i])
 
 
 
@@ -108,11 +113,11 @@ for i in range(0, len(u)):
 
 plt.figure()
 
-plt.title("$\\xi$ in funzione di u")
+plt.title("$\\xi$ in funzione di U")
 
-plt.plot(u, xi, linestyle="-", marker="", color="blue")
+plt.plot(U, xi, linestyle="-", marker="", color="blue")
 
-plt.xlabel("u [s]")
+plt.xlabel("U [s]")
 plt.ylabel("$\\xi$")
 
 plt.show()
@@ -123,6 +128,10 @@ plt.show()
 
 # STAMPA SU FILE
 
+file_name= path + "\\" + file_name
 
+file= open(file_name, "w")
 
+np.savetxt(file, np.c_[U, xi])
+file.close()
 

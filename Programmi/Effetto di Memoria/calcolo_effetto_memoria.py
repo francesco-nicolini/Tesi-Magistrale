@@ -3,8 +3,26 @@ import matplotlib.pyplot as plt
 from scipy.integrate import quad
 
 
+# VARIABII PROGRAMMA
 
-# PARAMETRI DA FISSARE
+# nella variabile componenti indicare quali componenti si vogliono calcolare. Le possibilita sono "H_11", "H_11", "H_11", "H_11". Se si vogliono indicare più componenti queste vanno separate da una virgola, ad esempio se vi vuole conoscere H_11 e H_22 basta scrivere componenti="H_11, H_22".
+componenti="H_11, H_12, H_22, H_33"
+
+# percorso del file da cui leggere i valori di xi e dei corrisponendenti U
+file_U_xi=""
+
+# path e nome dei file in cui salvare le componenti di H_ij calcolate
+path_H=""
+file_name_H_11="H_11"
+file_name_H_12="H_12"
+file_name_H_22="H_22"
+file_name_H_33="H_33"
+
+
+
+
+
+# PARAMETRI FISICI
 
 
 # e è l'eccentricità
@@ -24,6 +42,9 @@ m_2= 1
 
 # COSTANTI VARIE
 
+
+# velocità della luce nel vuoto in m/s
+c= 299792458
 
 # massa del sole in kg
 M_s=1.989*10**(30)
@@ -115,7 +136,8 @@ def M_33_3(xi):
 
 # l'integrale da calcolare dipende da xi solo per quanto riguarda il suo estremo superiore. Quest, corrispondenti ai valori del tempo ritardato che si vuole esplorare, sono letti da un file esterno
 
-U, xi= np.
+U, xi= np.loadtxt(file_U_xi, unpack=True)
+
 
 
 
@@ -128,11 +150,23 @@ U, xi= np.
 
 # CALCOLO DELL'INTEGRALE DI (M_11^(3))**2
 
-# definizione funzione integranda
+if ("H_11" in componenti):
 
-def integr_11_quad(xi):
+    # definizione funzione integranda
 
-    return ( M_11_3(xi) )**2/( xi_1(xi) )
+    def integranda_11_11(xi):
+
+        return ( M_11_3(xi) )**2/( xi_1(xi) )
+
+
+    # calcolo dell'integrale
+
+    integrale_11_11= np.zeros(len(U))
+
+    for i in range(0, len(U)):
+        integrale_11_11[i]= quad(integranda_11_11, -np.inf, xi[i] )
+
+
 
 
 
@@ -141,11 +175,23 @@ def integr_11_quad(xi):
 
 # CALCOLO DELL'INTEGRALE DI (M_12^(3))**2
 
-# definizione funzione integranda
+if ( ("H_11" in componenti) or ("H_22" in componenti) ):
 
-def integr_12_quad(xi):
+    # definizione funzione integranda
 
-    return ( M_12_3(xi) )**2/( xi_1(xi) )
+    def integranda_12_12(xi):
+
+        return ( -2*G/(7*c**(5)) )*( M_12_3(xi) )**2/( xi_1(xi) )
+
+
+    # calcolo dell'integrale
+
+    integrale_12_12= np.zeros(len(U))
+
+    for i in range(0, len(U)):
+        integrale_12_12[i]= quad(integranda_12_12, -np.inf, xi[i] )
+
+
 
 
 
@@ -154,11 +200,23 @@ def integr_12_quad(xi):
 
 # CALCOLO DELL'INTEGRALE DI M_11^(3)*M_12^(3)
 
-# definizione funzione integranda
+if ("H_12" in componenti):
 
-def integr_11_12(xi):
+    # definizione funzione integranda
 
-    return ( M_11_3(xi)*M_12_3(xi) )/( xi_1(xi) )
+    def integranda_11_12(xi):
+
+        return ( -2*G/(7*c**(5)) )*( M_11_3(xi)*M_12_3(xi) )/( xi_1(xi) )
+
+
+    # calcolo dell'integrale
+
+    integrale_11_12= np.zeros(len(U))
+
+    for i in range(0, len(U)):
+        integrale_11_12[i]= quad(integranda_11_12, -np.inf, xi[i] )
+
+
 
 
 
@@ -167,11 +225,23 @@ def integr_11_12(xi):
 
 # CALCOLO DELL'INTEGRALE DI M_12^(3)*M_22^(3)
 
-# definizione funzione integranda
+if ("H_12" in componenti):
 
-def integr_12_22(xi):
+    # definizione funzione integranda
 
-    return ( M_12_3(xi)*M_22_3(xi) )/( xi_1(xi) )
+    def integranda_12_22(xi):
+
+        return ( -2*G/(7*c**(5)) )*( M_12_3(xi)*M_22_3(xi) )/( xi_1(xi) )
+
+
+    # calcolo dell'integrale
+
+    integrale_12_22= np.zeros(len(U))
+
+    for i in range(0, len(U)):
+        integrale_12_22[i]= quad(integranda_12_22, -np.inf, xi[i] )
+
+
 
 
 
@@ -180,11 +250,23 @@ def integr_12_22(xi):
 
 # CALCOLO DELL'INTEGRALE DI (M_22^(3))**2
 
-# definizione funzione integranda
+if ("H_22" in componenti):
 
-def integr_22_quad(xi):
+    # definizione funzione integranda
 
-    return ( M_22_3(xi) )**2/( xi_1(xi) )
+    def integranda_22_22(xi):
+
+        return ( -2*G/(7*c**(5)) )*( M_22_3(xi) )**2/( xi_1(xi) )
+
+
+    # calcolo dell'integrale
+
+    integrale_22_22= np.zeros(len(U))
+
+    for i in range(0, len(U)):
+        integrale_22_22[i]= quad(integranda_22_22, -np.inf, xi[i] )
+
+
 
 
 
@@ -193,8 +275,107 @@ def integr_22_quad(xi):
 
 # CALCOLO DELL'INTEGRALE DI (M_33^(3))**2
 
-# definizione funzione integranda
+if ("H_33" in componenti):
 
-def integr_33_quad(xi):
+    # definizione funzione integranda
 
-    return ( M_33_3(xi) )**2/( xi_1(xi) )
+    def integranda_33_33(xi):
+
+        return ( -2*G/(7*c**(5)) )*( M_33_3(xi) )**2/( xi_1(xi) )
+
+
+    # calcolo dell'integrale
+
+    integrale_33_33= np.zeros(len(U))
+
+    for i in range(0, len(U)):
+        integrale_33_33[i]= quad(integranda_33_33, -np.inf, xi[i] )
+
+
+
+
+
+
+
+
+# DETERMINAZIONE DELLE COMPONENTI DI H
+
+if ("H_11" in componenti):
+    H_11= integrale_11_11 + integrale_12_12
+
+if ("H_12" in componenti):
+    H_12= integrale_11_12 + integrale_12_22
+
+if ("H_22" in componenti):
+    H_22= integrale_12_12 + integrale_22_22
+
+if ("H_33" in componenti):
+    H_33= integrale_33_33
+
+
+
+
+
+
+
+
+# GRAFICO DELLE COMPOENTI DI H_ij IN FUNZIONE DI U
+
+plt.figure()
+
+plt.title("Componenti di $H_{ij}$ in funzione del termpo ritardato U")
+
+if ("H_11" in componenti):
+    plt.plot(U, H_11, linestyle="-", marker="", color="C0", label="$H_{11}$")
+
+if ("H_12" in componenti):
+    plt.plot(U, H_12, linestyle="-", marker="", color="C1", label="$H_{12}$")
+
+if ("H_22" in componenti):
+    plt.plot(U, H_22, linestyle="-", marker="", color="C2", label="$H_{22}$")
+
+if ("H_33" in componenti):
+    plt.plot(U, H_33, linestyle="-", marker="", color="C3", label="$H_{33}$")
+
+plt.xlabel("U [s]")
+plt.ylabel("$H_{ij}$")
+
+plt.xlim(U[0], U[-1])
+
+plt.legend()
+plt.show()
+
+
+
+
+
+
+
+
+# SALVATAGGIO DELLE COMPONENENTI DI H_ij SU FILE
+
+if ("H_11" in componenti):
+    file_name_H_11= path_H + "\\" + file_name_H_11
+    file_H_11= open(file_name_H_11, "w")
+    np.savetxt(file_H_11, np.c_[U, H_11])
+    file_H_11.close()
+
+if ("H_12" in componenti):
+    file_name_H_12= path_H + "\\" + file_name_H_12
+    file_H_12= open(file_name_H_12, "w")
+    np.savetxt(file_H_12, np.c_[U, H_12])
+    file_H_12.close()
+
+if ("H_22" in componenti):
+    file_name_H_22= path_H + "\\" + file_name_H_22
+    file_H_22= open(file_name_H_22, "w")
+    np.savetxt(file_H_22, np.c_[U, H_22])
+    file_H_22.close()
+
+if ("H_33" in componenti):
+    file_name_H_33= path_H + "\\" + file_name_H_33
+    file_H_33= open(file_name_H_33, "w")
+    np.savetxt(file_H_33, np.c_[U, H_33])
+    file_H_33.close()
+
+

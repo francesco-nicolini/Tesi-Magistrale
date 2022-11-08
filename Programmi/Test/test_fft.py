@@ -16,7 +16,7 @@ n= sign.size
 dt= t[1]-t[0]
 freq= np.fft.fftfreq(n, dt)
 
-# calcolo della derivata inversa
+# calcolo della trasformata inversa
 inv= np.fft.ifft(tras)
 
 n= tras.size
