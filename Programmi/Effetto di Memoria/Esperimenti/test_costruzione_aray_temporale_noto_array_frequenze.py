@@ -138,7 +138,7 @@ ax[0].set_ylabel("Segnale [U.A.]")
 
 
 
-ax[1].set_title("Seganel nel dominio delle frequenze")
+ax[1].set_title("Segnale nel dominio delle frequenze")
 
 ax[1].plot(f, segn_tras.real, marker="", linestyle="-", color="red")
 ax[1].plot([f[0], f[-1]], [0, 0], marker="", linestyle="-", color="black", linewidth=0.8)

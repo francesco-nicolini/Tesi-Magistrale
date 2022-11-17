@@ -19,7 +19,7 @@ path_DP= "C:\\Users\\39366\\Dropbox\\PC\\Documents\\GitHub\\Tesi-Magistrale\\Pro
 file_name_DP= "DP"
 
 # N è la dimenzione dell'array dei tempi. E' conveniente scegliere per questa variabile una potenza di 2, così da rendere più efficiente il calcolo della fft
-N= 8192
+N= 8192*2
 
 # n è la dimenzione dell'array delle frequenze. Poichè si utilizza la funzione np.fft.rfft(), l'array in uscita da questa ha dimenzione N/2 + 1 e, per N pari, la sua prima componente corrisponde alla frequenza nulla, mentre l'ultima alla frequenza di Nyquist, pari a metà della frequenza di campionamento. Vengono inoltre calcolati solo i valori corrisponndenti a frequenze positive, in quanto, essendo presente in ingresso un'array reale, la trasformata risulta essere hermitiana.
 n= int( N/2 + 1 )
@@ -30,8 +30,8 @@ freq_min= 0
 # freq_max è la frequenza massima considerata
 freq_max= 2
 
-
-
+# fraz è la percentuale di area al di setto della potenza nel domio del tempo e costruita simmetricamente intorno all'origine. Gli estremi di tale intervallo vengono usati epr determinare la durata temporale del segnale
+fraz= 0.9
 
 
 
@@ -95,14 +95,14 @@ alpha= G*M*mu
 A= np.sqrt(mu*a**(3)/alpha)
 
 # cost è una costante che compare nella formula per lo spettro in potenza
-cost= -( 2*G**(2) )/( 315*np.pi**(2)*c**(10) )
+cost= G/( 45*c**(5) )
 
 # nu_0 è una costante che compare nelle trasformate di Fourier delle componenti del quadrupolo
 nu_0 = np.sqrt( a**(3)/(G*M) )
 
 
 
-print(G*m_1/c**(2))
+
 
 
 
@@ -201,54 +201,26 @@ def M_33_3(xi):
 
 
 
-'''
-# TRASFORMATE DI FOURIER DELLE COMPONENTI DEL QUADRUPOLO
-
-# hankel1_primo è funzione di Hankel primata. nu è l'argoemnto, mentre eta è l'ordine. La funzione hankel1 appartiene alla libreria scipy e fornisce i valori della funzione di Hankel del primo tipo.
-def hankel1_primo(nu, eta):
-
-    return 0.5*( hankel1(eta-1, nu) - hankel1(eta+1, nu) )
 
 
+# Questa funzione inverte l'ordine di alcuni elementi dell'array in ingresso, nello specifico pone per primi quegli elementi che si trovano oltre la metà. Ciò viene fatto al fine di rendere più bella la rappresentazione grafica degli array ottenuti mediante l'utilizzo di fft, evitando che vengano disegnati dei punti viccini ma non congiunti e punti distanti ma congiunti
+def array_graf(a):
 
-# M_11_fourier è la trasformata di Fourier della componente 11 del quadrupolo
-def M_11_fourier(f):
+    n= len(a)
 
-    nu= f*nu_0
-    return  (a**(2)*mu*np.pi)/(4*f)*( 16*e*hankel1_primo(1j*nu*e, 1j*nu) + (e**(2) - 3)*hankel1_primo(1j*nu*e*0.5, 1j*nu) )
+    if( np.iscomplexobj(a) ):
+        b= np.zeros(n, dtype=complex)
 
+    else:
+        b= np.zeros(n)
 
+    for i in range(0, int(n/2)):
+        b[i] = a[int(n/2) + i]
 
-# M_12_fourier è la trasformata di Fourier della componente 12 del quadrupolo
-def M_12_fourier(f):
+    for i in range(0, int(n/2)):
+        b[int(n/2) + i]= a[i]
 
-    nu= f*nu_0
-    return  -(3*a**(2)*mu*np.pi)/(4*f*e)*np.sqrt(e**(2) - 1)*( 4*e*hankel1(1j*nu, 1j*nu*e) - hankel1(1j*nu, 1j*nu*e*0.5) )
-
-
-
-# M_22_fourier è la trasformata di Fourier della componente 22 del quadrupolo
-def M_22_fourier(f):
-
-    nu= f*nu_0
-    return  -(a**(2)*mu*np.pi)/(4*f)*( 8*e*hankel1_primo(1j*nu*e, 1j*nu) - (3 - 2*e**(2))*hankel1_primo(1j*nu*e*0.5, 1j*nu) )
-
-
-
-# M_33_fourier è la trasformata di Fourier della componente 33 del quadrupolo
-def M_33_fourier(f):
-
-    nu= f*nu_0
-    return  (a**(2)*mu*np.pi)/(4*f)*( 8*e*hankel1_primo(1j*nu*e, 1j*nu) + e**(2)*hankel1_primo(1j*nu*e*0.5, 1j*nu) )
-'''
-
-# COMPONENTI DEL QUADRUPOLO
-
-
-
-
-
-
+    return b
 
 
 
@@ -307,7 +279,7 @@ plt.figure()
 
 plt.title("$\\xi$ in funzione del tempo")
 
-plt.plot(time, xi, linestyle="-", marker="", color="blue")
+plt.plot(array_graf(time), array_graf(xi), linestyle="-", marker="", color="blue")
 plt.plot([time[0], time[-1]], [0, 0], linestyle="-", marker="", color="black", linewidth= 0.8)
 
 plt.xlabel("t [s]")
@@ -321,48 +293,114 @@ plt.show()
 
 
 
-# CALCOLO DELLE TRASFORMATE DI FOURIER DEI QUADRATI DELLE DERIVATE CUBICHE DELLE COMPONENTI DEL QUADRUPOLO
 
+
+# CALCOLO DELLA POTENZA NEL DOMINIO DEL TEMPO
+
+
+
+P_t= np.zeros(len(time))
+
+
+for i in range( 0, len(time)):
+
+    P_t[i]= cost*( M_11_3(xi[i])**2 + M_22_3(xi[i])**2 + 2*M_12_3(xi[i])**2 + M_33_3(xi[i])**2 )
+
+
+P_t= P_t*(M_s*UA**2)
+
+
+
+
+
+
+
+# CALCOLO DEGLI ESTREMI DELL'AREA PARI AD UNA CERTA PERCENTUALE DELL'AREA TOTALE
+
+time_graf= array_graf(time)
+P_t_graf= array_graf(P_t)
+
+
+integ_totale= np.trapz(P_t_graf, time_graf)
+
+somma= P_t[0]
+
+i= 1
+
+while(1):
+
+    somma_estremi= (P_t[i] + P_t[-i])/2
+
+    integ= (somma + somma_estremi)*dt
+
+    rapporto= integ/integ_totale
+
+    if( rapporto >= fraz ):
+
+        i_sup= i
+        break
+
+    somma= somma + P_t[i] + P_t[-i]
+
+    i= i+1
+
+
+
+
+
+
+
+# GRAFICO DELLA POTENZA NEL DOMINIO DEL TEMPO
+
+time_graf= array_graf(time)
+P_t_graf= array_graf(P_t)
+
+plt.figure()
+
+plt.title("Potenza nel dominio del tempo all\'ordine Newtoniano")
+
+plt.plot(time_graf, P_t_graf, linestyle="-", marker="", color="blue")
+plt.plot([ min(time_graf), max(time_graf)], [ 0, 0], linestyle="-", marker="", color="black", linewidth= 0.8)
+
+
+mask_color= (time_graf < time[i_sup]) & ( time_graf > time[-i_sup])
+
+time_color= time_graf[mask_color]
+P_t_color= P_t_graf[mask_color]
+
+plt.fill_between(time_color, 0, P_t_color)
+
+print("\n\nIl rapporto tra l\'area colorata e l'area totale è {:.3} ".format( np.trapz(P_t_color, time_color)/integ_totale) )
+print("\nIl processo dura {0} s". format(time[i_sup] - time[-i_sup]))
+
+plt.xlabel("t [s]")
+plt.ylabel("P(t) [J/s]")
+
+plt.xlim(min(time_graf), max(time_graf))
+
+#plt.yscale("log")
+
+
+
+
+
+
+
+# CALCOLO DELLO SPETTRO IN POTENZA
 
 tras_11_cubo = np.fft.rfft( M_11_3(xi) )
-#tras_12_cubo = np.fft.rfft( M_12_3(xi) )
+tras_12_cubo = np.fft.rfft( M_12_3(xi) )
 tras_22_cubo = np.fft.rfft( M_22_3(xi) )
 tras_33_cubo = np.fft.rfft( M_33_3(xi) )
 
 
+P_f= np.zeros(len(freq))
 
+for i in range(0, len(freq)):
 
+    P_f[i]= cost*( np.abs(tras_11_cubo[i])**2 + np.abs(tras_22_cubo[i])**2 + 2*np.abs(tras_12_cubo[i])**2 + np.abs(tras_33_cubo[i])**2 )
 
-
-
-# CALCOLO DELLE ANTITRASORMATE
-
-
-antitras_11_quadro= ( M_11_3(xi) )**2
-antitras_12_quadro= ( M_12_3(xi) )**2
-antitras_22_quadro= ( M_22_3(xi) )**2
-antitras_33_quadro= ( M_33_3(xi) )**2
-
-
-
-
-
-
-
-# CALCOLO DELLE TRASFORMATE DI FOURIER DEI QUADRATI DELLE DERIVATE CUBICHE DELLE COMPONENTI DEL QUADRUPOLO
-
-
-# trasformata del quadrato della derivata cubica della componenti 11 del quadrupolo
-tras_11= np.fft.rfft(antitras_11_quadro)
-
-# trasformata del quadrato della derivata cubica della componenti 12 del quadrupolo
-tras_12= np.fft.rfft(antitras_12_quadro)
-
-# trasformata del quadrato della derivata cubica della componenti 22 del quadrupolo
-tras_22= np.fft.rfft(antitras_22_quadro)
-
-# trasformata del quadrato della derivata cubica della componenti 33 del quadrupolo
-tras_33= np.fft.rfft(antitras_33_quadro)
+P_f= P_f*(M_s*UA**2)
 
 
 
@@ -370,163 +408,27 @@ tras_33= np.fft.rfft(antitras_33_quadro)
 
 
 
-# CALCOLO DELLA CORREZIONE ALLO SPETTRO IN FREQUENZA
-
-DP= np.zeros(n, dtype=complex)
-
-'''
-for i in range(0, n):
-
-    DP[i]= tras_11[i]*M_11_fourier(-freq[i]) + tras_22[i]*M_22_fourier(-freq[i]) + tras_33[i]*M_33_fourier(-freq[i]) + tras_12[i]*( M_11_fourier(-freq[i]) + M_22_fourier(-freq[i]) )
-
-    DP[i]= cost*(-1j*freq[i]**(3))*DP[i]
-'''
+# GRAFICO DELLA POTENZA NEL DOMINIO DEL TEMPO
 
 
-for i in range(0, n):
+plt.figure()
 
-    DP[i]= tras_11[i]*np.conjugate( tras_11_cubo[i] )  + tras_22[i]*np.conjugate( tras_22_cubo[i] ) + tras_33[i]*np.conjugate( tras_33_cubo[i] ) + 3*tras_12[i]*( np.conjugate( tras_11_cubo[i] ) + np.conjugate( tras_22_cubo[i] ) )
+plt.title("Spettro di potenza all\'ordine Newtoniano")
 
-    DP[i]= cost*DP[i]
-
-
-
-# converzione in Joule/Hertz
+plt.plot(freq, P_f, linestyle="-", marker="", color="red")
+plt.plot([ min(freq), max(freq)], [ 0, 0], linestyle="-", marker="", color="black", linewidth= 0.8)
 
 
-DP= (M_s*UA**2)*DP
+plt.xlabel("f [Hz]")
+plt.ylabel("P(t) [J/Hz]")
 
+plt.xlim(min(freq), max(freq))
 
-
-
-
-
-# GRAFICO DELLA CORREZIONE ALLO SPETTRO IN FREQUNZA
-
-fig=plt.figure()
-
-'''
-plt.subplot(3,1,1)
-
-plt.title("Correzione allo spettro di potenza reale")
-
-
-plt.plot(freq, abs(DP.real), marker="", linestyle="-", color="blue")
-plt.plot( [freq[0], freq[-1]], [0, 0], marker="", linestyle="-", color="black", linewidth=0.8)
-
-
-plt.xlim(freq[0], freq[-1])
-plt.xlim(0, freq[-1])
-
-#plt.xscale("log")
 plt.yscale("log")
 
-
-plt.xlabel("f [Hz]")
-plt.ylabel("$\\Delta$P [J/Hz]")
-
-plt.subplot(3,1,2)
-
-plt.title("Correzione allo spettro di potenza immaginaria")
-
-
-plt.plot(freq, abs(DP.imag), marker="", linestyle="-", color="blue")
-plt.plot( [freq[0], freq[-1]], [0, 0], marker="", linestyle="-", color="black", linewidth=0.8)
-
-
-plt.xlim(freq[0], freq[-1])
-plt.xlim(0, freq[-1])
-
-#plt.xscale("log")
-plt.yscale("log")
-
-
-plt.xlabel("f [Hz]")
-plt.ylabel("$\\Delta$P [J/Hz]")
-
-
-plt.subplot(3,1,3)
-
-plt.title("Correzione allo spettro di potenza valore assoluto")
-
-
-plt.plot(freq, np.abs(DP), marker="", linestyle="-", color="blue")
-plt.plot( [freq[0], freq[-1]], [0, 0], marker="", linestyle="-", color="black", linewidth=0.8)
-
-
-plt.xlim(freq[0], freq[-1])
-
-
-#plt.xscale("log")
-plt.yscale("log")
-
-
-plt.xlabel("f [Hz]")
-plt.ylabel("$\\Delta$P [J/Hz]")
-
-'''
-
-plt.subplot(2,1,1)
-
-plt.title("Correzione allo spettro di potenza valore assoluto")
-
-
-plt.plot(freq, np.abs(DP), marker="", linestyle="-", color="blue")
-plt.plot( [freq[0], freq[-1]], [0, 0], marker="", linestyle="-", color="black", linewidth=0.8)
-
-
-plt.xlim(freq[0], freq[-1])
-
-
-#plt.xscale("log")
-plt.yscale("log")
-
-
-plt.xlabel("f [Hz]")
-plt.ylabel("$\\Delta$P [J/Hz]")
-
-
-plt.subplot(2,1,2)
-
-plt.title("Correzione allo spettro di potenza fase")
-
-
-plt.plot(freq, np.angle(DP), marker="", linestyle="-", color="blue")
-plt.plot( [freq[0], freq[-1]], [0, 0], marker="", linestyle="-", color="black", linewidth=0.8)
-
-
-plt.xlim(freq[0], freq[-1])
-
-
-#plt.xscale("log")
-
-
-plt.xlabel("f [Hz]")
-plt.ylabel("$\\Delta$P [J/Hz]")
-
-
-
-
-
-
-
-plt.tight_layout()
 plt.show()
 
 
-
-
-
-# SALVATAGGIO SU FILE
-
-file_name_DP= file_name_DP + "_e_" + str(e) + "_a_" + str(a) + "_m1_" + str(m_1) + "_m2_" + str(m_2)
-
-file_name= path_DP + "\\" + file_name_DP
-
-file= open(file_name, "w")
-
-np.savetxt(file, np.c_[freq, DP])
-file.close()
 
 
 
