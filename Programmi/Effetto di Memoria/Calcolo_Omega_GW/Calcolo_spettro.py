@@ -10,19 +10,19 @@ import pandas as pd
 
 # VARIABII PROGRAMMA
 
-'''
-# percorso del file da cui leggere i valori di xi e dei corrisponendenti U
-file_U_xi=""
-'''
+
 # path e nome dei file in cui salvare lo spettro in potenza e del file in cui salvare la frequenze e i valori delle due masse
 path= "C:\\Users\\39366\\Dropbox\\PC\\Documents\\GitHub\\Tesi-Magistrale\\Programmi\\Effetto di Memoria\\Calcolo_diretto_dello_spettro_in_potenza\\Risultati"
 
 file_name_DP= "DP_in_funzione_f_m_1_m_2"
 
-file_name_f_m_1_m_2= "valori_di_f_m_1_m_2"
+file_name_f= "valori_di_f"
+file_name_m_1= "valori_di_m_1"
+file_name_m_2= "valori_di_m_2"
+
 
 # N è la dimenzione dell'array dei tempi. E' conveniente scegliere per questa variabile una potenza di 2, così da rendere più efficiente il calcolo della fft
-N= 8192
+N= 2048
 
 # n è la dimenzione dell'array delle frequenze. Poichè si utilizza la funzione np.fft.rfft(), l'array in uscita da questa ha dimenzione N/2 + 1 e, per N pari, la sua prima componente corrisponde alla frequenza nulla, mentre l'ultima alla frequenza di Nyquist, pari a metà della frequenza di campionamento. Vengono inoltre calcolati solo i valori corrisponndenti a frequenze positive, in quanto, essendo presente in ingresso un'array reale, la trasformata risulta essere hermitiana.
 n= int( N/2 + 1 )
@@ -31,7 +31,7 @@ n= int( N/2 + 1 )
 freq_min= 0
 
 # freq_max è la frequenza massima considerata
-freq_max= 2
+freq_max= 20
 
 
 
@@ -43,23 +43,23 @@ freq_max= 2
 
 
 # e è l'eccentricità
-e= 1.005
+e= 1.05
 
 # distanza minima di avvicnamento in U.A.
-r_min= 0.005
+r_min= 0.05
 
 # a è il semi asse maggiore in U.A.
 a= r_min/(e-1)
 
-# m_1_min e m_1_max sono il valore minimo e il valore massimo per la massa del primo ogetto in masse solari
-m_1_min=
-m_1_max=
+# m_1_min e m_1_max sono il valore minimo e il valore massimo per la massa del primo ogetto in masse solari,n_m_1 è la dimenzione dell'array delle masse del primo ogetto
+m_1_min= 1
+m_1_max= 10
+n_m_1= 100
 
-
-# m_2_min e m_2_max sono il valore minimo e il valore massimo per la massa del secondo ogetto in masse solari
-m_2_min=
-m_2_max=
-
+# m_2_min e m_2_max sono il valore minimo e il valore massimo per la massa del secondo ogetto in masse solari,,n_m_2 è la dimenzione dell'array delle masse del secondo ogetto
+m_2_min= 1
+m_2_max= 10
+n_m_2= 100
 
 
 
@@ -89,7 +89,7 @@ G= 6.7*10**(-11)
 G= (M_s/UA**3)*G
 
 # cost è una costante che compare nella formula per lo spettro in potenza
-cost= -( 2*G**(2) )/( 315*np.pi**(2)*c**(10) )
+cost= -( 4*G**(2) )/( 315*c**(10) )
 
 '''
 # nu_0 è una costante che compare nelle trasformate di Fourier delle componenti del quadrupolo
@@ -97,7 +97,6 @@ nu_0 = np.sqrt( a**(3)/(G*M) )
 '''
 
 
-print(G*m_1/c**(2))
 
 
 
@@ -108,7 +107,7 @@ print(G*m_1/c**(2))
 
 # FUNZIONE DA INVERTIRE
 
-def t_xi(xi, t):
+def t_xi(xi, t, A):
 
     return A*(e*np.sinh(xi) - xi) - t
 
@@ -118,7 +117,7 @@ def t_xi(xi, t):
 # INVERSIONE DELL'EQUAZIONE
 
 
-def inver_t_xi(t):
+def inver_t_xi(t, A):
 
     if(t < 0):
         initial_guess = -np.log(-2*t/A)
@@ -130,7 +129,7 @@ def inver_t_xi(t):
         initial_guess= np.log(2*t/A)
 
 
-    xi_soluz= fsolve(t_xi, initial_guess, args=(t))
+    xi_soluz= fsolve(t_xi, initial_guess, args=(t, A))
 
     return xi_soluz[0]
 
@@ -198,12 +197,35 @@ def M_33_3(xi, mu, A):
 
 
 
+# Questa funzione inverte l'ordine di alcuni elementi dell'array in ingresso, nello specifico pone per primi quegli elementi che si trovano oltre la metà. Ciò viene fatto al fine di rendere più bella la rappresentazione grafica degli array ottenuti mediante l'utilizzo di fft, evitando che vengano disegnati dei punti viccini ma non congiunti e punti distanti ma congiunti
+def array_graf(a):
+
+    n= len(a)
+
+    if( np.iscomplexobj(a) ):
+        b= np.zeros(n, dtype=complex)
+
+    else:
+        b= np.zeros(n)
+
+    for i in range(0, int(n/2)):
+        b[i] = a[int(n/2) + i]
+
+    for i in range(0, int(n/2)):
+        b[int(n/2) + i]= a[i]
+
+    return b
+
+
+
+
+
 
 
 # COSTRUZIONE ARRAY MASSE
 
-m_1= np.linespace(m_1_min, m_1_max)
-m_2= np.linespace(m_2_min, m_2_max)
+m_1= np.linspace(m_1_min, m_1_max, n_m_1)
+m_2= np.linspace(m_2_min, m_2_max, n_m_2)
 
 
 
@@ -242,20 +264,13 @@ for i in range(1, int(N/2)):
 
 
 
-print((N/2)*dt)
 
 
 
-# CALCOLO DEGLI xi CORRISPONEDENTI AI TEMPI E RAPPRESENTAZIONE GRAFICA
 
 
-xi= np.zeros(len(time))
 
-for i in range(0, len(time)):
-
-    xi[i]= inver_t_xi(time[i])
-
-
+'''
 # grafico di xi in funzione di t
 
 plt.figure()
@@ -269,31 +284,7 @@ plt.xlabel("t [s]")
 plt.ylabel("$\\xi$")
 
 plt.show()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+'''
 
 
 
@@ -302,12 +293,20 @@ plt.show()
 
 # CALCOLO DELLA CORREZIONE ALLO SPETTRO IN FREQUENZA
 
+
+
 DP= np.zeros( [ len(freq), len(m_1), len(m_2) ], dtype=complex)
 
 
 
 
 for i in range(0, len(m_1)):
+
+    if(i<10):
+        print(" {:.0f} % ".format(100*i/len(m_1)) )
+
+    else:
+        print("{:.0f} % ".format(100*i/len(m_1)) )
 
     for j in range(0, len(m_2)):
 
@@ -325,15 +324,26 @@ for i in range(0, len(m_1)):
         A= np.sqrt(mu*a**(3)/alpha)
 
 
+        # CALCOLO DEGLI xi CORRISPONEDENTI AI TEMPI E RAPPRESENTAZIONE GRAFICA
+
+
+        xi= np.zeros(len(time))
+
+        for l in range(0, len(time)):
+
+            xi[l]= inver_t_xi(time[l], A)
+
+        xi= array_graf(xi)
+
 
 
         # CALCOLO DELLE TRASFORMATE DI FOURIER DEI QUADRATI DELLE DERIVATE CUBICHE DELLE COMPONENTI DEL QUADRUPOLO
 
 
-        tras_11_cubo = np.fft.rfft( M_11_3(xi, mu, A) )
-        #tras_12_cubo = np.fft.rfft( M_12_3(xi, mu, A) )
-        tras_22_cubo = np.fft.rfft( M_22_3(xi, mu, A) )
-        tras_33_cubo = np.fft.rfft( M_33_3(xi, mu, A) )
+        tras_11_cubo = np.fft.rfft( M_11_3(xi, mu, A)*np.hanning(len(xi)) )
+        #tras_12_cubo = np.fft.rfft( M_12_3(xi, mu, A)*np.hanning(len(xi)) )
+        tras_22_cubo = np.fft.rfft( M_22_3(xi, mu, A)*np.hanning(len(xi)) )
+        tras_33_cubo = np.fft.rfft( M_33_3(xi, mu, A)*np.hanning(len(xi)) )
 
 
 
@@ -343,10 +353,10 @@ for i in range(0, len(m_1)):
         # CALCOLO DELLE ANTITRASORMATE
 
 
-        antitras_11_quadro= ( M_11_3(xi, mu, A) )**2
-        antitras_12_quadro= ( M_12_3(xi, mu, A) )**2
-        antitras_22_quadro= ( M_22_3(xi, mu, A) )**2
-        antitras_33_quadro= ( M_33_3(xi, mu, A) )**2
+        antitras_11_quadro= ( M_11_3(xi, mu, A) )**2*np.hanning(len(xi))
+        antitras_12_quadro= ( M_12_3(xi, mu, A) )**2*np.hanning(len(xi))
+        antitras_22_quadro= ( M_22_3(xi, mu, A) )**2*np.hanning(len(xi))
+        antitras_33_quadro= ( M_33_3(xi, mu, A) )**2*np.hanning(len(xi))
 
 
 
@@ -382,27 +392,53 @@ for i in range(0, len(m_1)):
 
 
 
-
+DP= abs(DP)
 
 
 # SALVATAGGIO SU FILE
 
-file_name_DP= file_name_DP + "____e_" + str(e) + "_a_" + str(a)
-file_name_DP= path + "\\" + file_name_DP
+string_e= f'{e:.3f}'
+string_e= string_e.replace(".", "_")
+
+string_a= f'{a:.3f}'
+string_a= string_a.replace(".", "_")
+
+
+
+file_name_DP= file_name_DP + "____e_" + string_e + "_a_" + string_a
+file_name_DP= path + "\\" + file_name_DP + ".txt"
 
 df = pd.DataFrame( DP.reshape((-1, DP.shape[-1])), index= pd.MultiIndex.from_product( [range(DP.shape[0]), range(DP.shape[1])] ) ).to_csv(file_name_DP)
 
 
-file_name_f_m_1_m_2= file_name_f_m_1_m_2 + "____e_" + str(e) + "_a_" + str(a)
-file_name_f_m_1_m_2= path + "\\" + file_name_f_m_1_m_2
 
-file_f_m_1_m_2= open(file_name_f_m_1_m_2, "w")
+file_name_f= file_name_f + "____e_" + string_e + "_a_" + string_a
+file_name_f= path + "\\" + file_name_f + ".txt"
 
-# la prima colonna contiene le frequenze, la seconda i valori di m_1 e la terza quelli di m_2
-np.savetxt(file_f_m_1_m_2, np.c_[freq, m_1, m_2])
-file_f_m_1_m_2.close()
+file_f= open(file_name_f, "w")
+
+np.savetxt(file_f, freq)
+file_f.close()
 
 
+
+file_name_m_1= file_name_m_1 + "____e_" + string_e + "_a_" + string_a
+file_name_m_1= path + "\\" + file_name_m_1 + ".txt"
+
+file_m_1= open(file_name_m_1, "w")
+
+np.savetxt(file_m_1, m_1)
+file_m_1.close()
+
+
+
+file_name_m_2= file_name_m_2 + "____e_" + string_e + "_a_" + string_a
+file_name_m_2= path + "\\" + file_name_m_2 + ".txt"
+
+file_m_2= open(file_name_m_2, "w")
+
+np.savetxt(file_m_2, m_2)
+file_m_2.close()
 
 
 

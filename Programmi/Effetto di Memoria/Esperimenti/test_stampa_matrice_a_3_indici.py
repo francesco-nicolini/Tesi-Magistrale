@@ -4,12 +4,14 @@ import pandas as pd
 
 
 path= "C:\\Users\\39366\\Dropbox\\PC\\Documents\\GitHub\\Tesi-Magistrale\\Programmi\\Effetto di Memoria\\Esperimenti\\file_txt"
-name_1= "stampa_matrice_3_indici"
+name= "stampa_matrice_3_indici"
 
 
-a= np.zeros( [100,100,100] )
+a= np.zeros( [2,2,2], dtype=complex )
 
-#print(a)
+a[0,0,0]= 1+1j
+a=abs(a)
+print(a)
 
 file_name= path + "\\" + name
 
@@ -25,3 +27,4 @@ A= np.array(df.agg(list, 1).groupby(level=0).agg(list).tolist())
 print("\n\n\n")
 
 print(A)
+print(type(A))

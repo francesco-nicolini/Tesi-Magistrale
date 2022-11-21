@@ -43,7 +43,7 @@ freq_max= 2
 e= 1.005
 
 # distanza minima di avvicnamento in U.A.
-r_min= 0.005
+r_min= 0.0005
 
 # a è il semi asse maggiore in U.A.
 a= r_min/(e-1)
@@ -102,8 +102,8 @@ nu_0 = np.sqrt( a**(3)/(G*M) )
 
 
 
-print(G*m_1/c**(2))
-
+print("R_s/r_min= ", G*M/(c**(2)*r_min))
+print("v_max/c= ", np.sqrt( G*M*(e+1)/(r_min*c**2)) )
 
 
 # DEFINIZIONE DELLE FUNZIONI DA UTILIZZARE
@@ -317,17 +317,36 @@ plt.show()
 
 
 
+# Questa funzione inverte l'ordine di alcuni elementi dell'array in ingresso, nello specifico pone per primi quegli elementi che si trovano oltre la metà. Ciò viene fatto al fine di rendere più bella la rappresentazione grafica degli array ottenuti mediante l'utilizzo di fft, evitando che vengano disegnati dei punti viccini ma non congiunti e punti distanti ma congiunti
+def array_graf(a):
+
+    n= len(a)
+
+    if( np.iscomplexobj(a) ):
+        b= np.zeros(n, dtype=complex)
+
+    else:
+        b= np.zeros(n)
+
+    for i in range(0, int(n/2)):
+        b[i] = a[int(n/2) + i]
+
+    for i in range(0, int(n/2)):
+        b[int(n/2) + i]= a[i]
+
+    return b
 
 
+xi= array_graf(xi)
 
 
-# CALCOLO DELLE TRASFORMATE DI FOURIER DEI QUADRATI DELLE DERIVATE CUBICHE DELLE COMPONENTI DEL QUADRUPOLO
+# CALCOLO DELLE TRASFORMATE DI FOURIER DELLE DERIVATE CUBICHE DELLE COMPONENTI DEL QUADRUPOLO
 
 
-tras_11_cubo = np.fft.rfft( M_11_3(xi) )
-#tras_12_cubo = np.fft.rfft( M_12_3(xi) )
-tras_22_cubo = np.fft.rfft( M_22_3(xi) )
-tras_33_cubo = np.fft.rfft( M_33_3(xi) )
+tras_11_cubo = np.fft.rfft( M_11_3(xi)*np.hanning(len(xi)) )
+#tras_12_cubo = np.fft.rfft( M_12_3(xi)*np.hanning(len(xi)) )
+tras_22_cubo = np.fft.rfft( M_22_3(xi)*np.hanning(len(xi)) )
+tras_33_cubo = np.fft.rfft( M_33_3(xi)*np.hanning(len(xi)) )
 
 
 
@@ -338,10 +357,10 @@ tras_33_cubo = np.fft.rfft( M_33_3(xi) )
 # CALCOLO DELLE ANTITRASORMATE
 
 
-antitras_11_quadro= ( M_11_3(xi) )**2
-antitras_12_quadro= ( M_12_3(xi) )**2
-antitras_22_quadro= ( M_22_3(xi) )**2
-antitras_33_quadro= ( M_33_3(xi) )**2
+antitras_11_quadro= ( M_11_3(xi) )**2*np.hanning(len(xi))
+antitras_12_quadro= ( M_12_3(xi) )**2*np.hanning(len(xi))
+antitras_22_quadro= ( M_22_3(xi) )**2*np.hanning(len(xi))
+antitras_33_quadro= ( M_33_3(xi) )**2*np.hanning(len(xi))
 
 
 

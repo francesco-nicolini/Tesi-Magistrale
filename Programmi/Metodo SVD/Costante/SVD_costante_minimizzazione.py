@@ -99,7 +99,7 @@ cost_seconda= 0.01
 
 
 # se si pone valori_iniziali pari a gaussiana, allora il programma individua la gaussiana che meglio approssima F_M, trova quindi i parametri (ampiezza, media e deviazione standard) della gaussiana il cui prodotto di convoluzione con se stessa restituisce l'altra gaussiana e la utilizza come condizione iniziale. Con qualunque altro valore rende la scelta delle consizioni iniziali personalizzabile
-valori_iniziali="qualsiasi"
+valori_iniziali="qualsias"
 
 
 
@@ -826,11 +826,16 @@ if (valori_iniziali=="gaussiana"):
 
     f_m_val_iniz= gauss(masse_f_m, A_gauss, mu_gauss, sigma_gauss)
 
-
+'''
 else:
     f_m_val_iniz=[0.1]*len(masse_f_m)
+'''
 
+f_m_val_iniz= np.zeros(len(masse_f_m))
 
+for i in range(0, len(masse_f_m)):
+
+    f_m_val_iniz[i]= f_m_funzione(masse_f_m[i], costante, m_inf, m_sup)
 
 # E' la funzione da minimizzare, f_m contiene le variabili, dm_f contiene la differenza tra due elementi successivi nella lista delle masse corrispondenti a f_m, mentre F_M è la soluzione trovata precedentemente mediante la fattorizzazione SVD che deve essere confrontata con il prodoto di convoluzione di f_m per se stessa
 
@@ -993,12 +998,13 @@ if (opzione_smooth=="media_mobile_1"):
 fig= plt.figure()
 
 
-plt.plot(masse_f_m, f_m_risult, linestyle="-", marker="", color="blue", label="Soluzione Individuata")
+#plt.plot(masse_f_m, f_m_risult, linestyle="-", marker="", color="blue", label="Soluzione Individuata")
 
 if (opzione_smooth=="media_mobile_1"):
 
     stringa="Soluzione individuata con\nmedia mobile con intervalli\ndi lunghezza {0}".format(lung_sottoin)
-    plt.plot(masse_f_m_medie, f_m_medie, linestyle="-", marker="", color="red", label=stringa)
+    stringa="Soluzione individuata"
+    plt.plot(masse_f_m_medie, f_m_medie, linestyle="-", marker="", color="blue", label=stringa)
 
 
 if ( disegna==True ):
@@ -1019,7 +1025,7 @@ if ( disegna==True ):
 
 
 plt.title("FUNZIONE LOGARITMICA DI MASSA")
-plt.xlabel("Massa [M_sole]")
+plt.xlabel("m [$M_{\odot}$]")
 plt.ylabel("f(m)")
 
 plt.xlim( masse_f_m[0], masse_f_m[-1])

@@ -982,12 +982,13 @@ if (opzione_smooth=="media_mobile_1"):
 fig= plt.figure()
 
 
-plt.plot(masse_f_m, f_m_risult, linestyle="-", marker="", color="blue", label="Soluzione Individuata")
+#plt.plot(masse_f_m, f_m_risult, linestyle="-", marker="", color="blue", label="Soluzione Individuata")
 
 if (opzione_smooth=="media_mobile_1"):
 
     stringa="Soluzione individuata con\nmedia mobile con intervalli\ndi lunghezza {0}".format(lung_sottoin)
-    plt.plot(masse_f_m_medie, f_m_medie, linestyle="-", marker="", color="red", label=stringa)
+    stringa="Soluzione individuata"
+    plt.plot(masse_f_m_medie, f_m_medie, linestyle="-", marker="", color="blue", label=stringa)
 
 
 if ( disegna==True ):
@@ -1001,12 +1002,17 @@ if ( disegna==True ):
 
     plt.plot(masse_f_m, f_m_funzione(masse_f_m, mu, sigma), linestyle="-", color="orange", label="Soluzione Esatta")
 
+estrem_inf= max( min(masse_f_m), min(masse_f_m_medie))
+estrem_sup= min( max(masse_f_m), max(masse_f_m_medie))
 
+plt.plot( [estrem_inf, estrem_sup], [ 0, 0], linestyle="-", marker="", color="black", linewidth=0.8)
 
 
 plt.title("FUNZIONE LOGARITMICA DI MASSA")
-plt.xlabel("Massa [M_sole]")
+plt.xlabel("m [$M_{\odot}$]")
 plt.ylabel("f(m)")
+
+plt.xlim( estrem_inf, estrem_sup)
 
 plt.legend()
 
@@ -1032,7 +1038,7 @@ plt.plot(masse_conv, conv, linestyle="-", color="blue", label="f(m)_m*f(m)_m")
 plt.plot(masse, F_M, linestyle="-", color="orange", marker="", label="F(M)")
 
 plt.title("PRODOTTO DI CONVOLUZIONE DELLA FUNZIONE LOGARITMICA DI MASSA")
-plt.xlabel("Massa [M_sole]")
+plt.xlabel("Massa [$M_{\odot}$]")
 plt.ylabel("f(m)*f(m)")
 
 plt.xlim( max(masse[0], masse_conv[0]), min(masse[-1], masse_conv[-1]))

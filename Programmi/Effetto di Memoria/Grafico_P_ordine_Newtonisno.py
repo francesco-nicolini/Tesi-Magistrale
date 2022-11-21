@@ -19,7 +19,7 @@ path_DP= "C:\\Users\\39366\\Dropbox\\PC\\Documents\\GitHub\\Tesi-Magistrale\\Pro
 file_name_DP= "DP"
 
 # N è la dimenzione dell'array dei tempi. E' conveniente scegliere per questa variabile una potenza di 2, così da rendere più efficiente il calcolo della fft
-N= 8192*2
+N= 8192*4
 
 # n è la dimenzione dell'array delle frequenze. Poichè si utilizza la funzione np.fft.rfft(), l'array in uscita da questa ha dimenzione N/2 + 1 e, per N pari, la sua prima componente corrisponde alla frequenza nulla, mentre l'ultima alla frequenza di Nyquist, pari a metà della frequenza di campionamento. Vengono inoltre calcolati solo i valori corrisponndenti a frequenze positive, in quanto, essendo presente in ingresso un'array reale, la trasformata risulta essere hermitiana.
 n= int( N/2 + 1 )
@@ -31,7 +31,7 @@ freq_min= 0
 freq_max= 2
 
 # fraz è la percentuale di area al di setto della potenza nel domio del tempo e costruita simmetricamente intorno all'origine. Gli estremi di tale intervallo vengono usati epr determinare la durata temporale del segnale
-fraz= 0.9
+fraz= 0.99999
 
 
 
@@ -311,6 +311,17 @@ P_t= P_t*(M_s*UA**2)
 
 
 
+cost_2= -(4*G**2)/(315*c**10)
+
+DP_t= np.zeros(len(time))
+
+for i in range( 0, len(time)):
+
+    DP_t[i]= cost_2*( M_11_3(xi[i])**3 + M_22_3(xi[i])**3 + 3*M_12_3(xi[i])**2*( M_11_3(xi[i]) + M_22_3(xi[i]) ) + M_33_3(xi[i])**3 )
+
+DP_t= DP_t*(M_s*UA**2)
+
+
 
 
 
@@ -359,7 +370,15 @@ plt.figure()
 
 plt.title("Potenza nel dominio del tempo all\'ordine Newtoniano")
 
-plt.plot(time_graf, P_t_graf, linestyle="-", marker="", color="blue")
+plt.plot(time_graf, P_t_graf, linestyle="-", marker="", color="blue", label="ordine 0")
+
+DP_t_graf= array_graf(DP_t)
+
+plt.plot(time_graf, P_t_graf + DP_t_graf, linestyle="-", marker="", color="red", label="ordine 0 e correzione")
+
+
+
+
 plt.plot([ min(time_graf), max(time_graf)], [ 0, 0], linestyle="-", marker="", color="black", linewidth= 0.8)
 
 
@@ -368,7 +387,7 @@ mask_color= (time_graf < time[i_sup]) & ( time_graf > time[-i_sup])
 time_color= time_graf[mask_color]
 P_t_color= P_t_graf[mask_color]
 
-plt.fill_between(time_color, 0, P_t_color)
+#plt.fill_between(time_color, 0, P_t_color)
 
 print("\n\nIl rapporto tra l\'area colorata e l'area totale è {:.3} ".format( np.trapz(P_t_color, time_color)/integ_totale) )
 print("\nIl processo dura {0} s". format(time[i_sup] - time[-i_sup]))
@@ -378,7 +397,36 @@ plt.ylabel("P(t) [J/s]")
 
 plt.xlim(min(time_graf), max(time_graf))
 
-#plt.yscale("log")
+plt.yscale("log")
+
+plt.legend()
+
+
+
+
+
+
+
+
+
+
+
+plt.figure()
+
+plt.title("Correzione alla potenza nel dominio del tempo all\'ordine Newtoniano")
+
+
+plt.plot(time_graf, np.abs(DP_t_graf), linestyle="-", marker="", color="blue")
+
+
+plt.xlabel("t [s]")
+plt.ylabel("DP(t) [J/s]")
+
+plt.xlim(min(time_graf), max(time_graf))
+
+plt.yscale("log")
+
+
 
 
 
@@ -413,14 +461,14 @@ P_f= P_f*(M_s*UA**2)
 
 plt.figure()
 
-plt.title("Spettro di potenza all\'ordine Newtoniano")
+plt.title("Spettro energetico")
 
-plt.plot(freq, P_f, linestyle="-", marker="", color="red")
+plt.plot(freq, P_f, linestyle="-", marker="", color="blue")
 plt.plot([ min(freq), max(freq)], [ 0, 0], linestyle="-", marker="", color="black", linewidth= 0.8)
 
 
 plt.xlabel("f [Hz]")
-plt.ylabel("P(t) [J/Hz]")
+plt.ylabel("P(f) [J/Hz]")
 
 plt.xlim(min(freq), max(freq))
 
